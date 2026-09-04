@@ -129,6 +129,10 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col bg-studio-bg text-neutral-100">
+      <header className="flex items-center gap-2 border-b border-studio-border bg-studio-bg px-3 py-1.5">
+        <span className="font-mono text-xs font-semibold tracking-[0.2em] text-primary">EDITO</span>
+        <span className="text-xs text-muted-foreground">Studio de montage audio</span>
+      </header>
       <Toolbar
         onImport={handleImport}
         isRecording={isRecording}

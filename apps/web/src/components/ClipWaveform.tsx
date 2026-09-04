@@ -71,8 +71,8 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
     if (!containerRef.current || !media) return;
     const ws = WaveSurfer.create({
       container: containerRef.current,
-      height: 64,
-      waveColor: "#a78bfa",
+      height: 96,
+      waveColor: "#4dd0e1",
       progressColor: "#f97316",
       cursorWidth: 0,
       interact: false,
@@ -127,13 +127,16 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
       onClick={(e) => { e.stopPropagation(); selectClip(clip.id); }}
       onDoubleClick={() => deleteClipWithHistory(clip)}
       style={{ left: secondsToPixels(clip.startTime, pxPerSecond), width: secondsToPixels(clip.duration, pxPerSecond) }}
-      className={`absolute top-1 h-16 cursor-pointer overflow-hidden rounded border ${
-        selectedClipId === clip.id ? "border-orange-400" : "border-transparent"
+      className={`absolute top-2 h-24 cursor-pointer overflow-hidden rounded-md border bg-console-inset ${
+        selectedClipId === clip.id ? "border-primary shadow-[0_0_0_1px_rgba(249,115,22,0.4)]" : "border-studio-border"
       }`}
     >
+      <span className="pointer-events-none absolute left-1.5 top-1 z-10 max-w-[calc(100%-0.75rem)] truncate rounded bg-studio-bg/70 px-1 font-mono text-[11px] text-muted-foreground">
+        {clip.name}
+      </span>
       <div ref={containerRef} />
-      <div onMouseDown={useEdgeDrag(clip, pxPerSecond, "left", updateClip)} className="absolute left-0 top-0 h-full w-1.5 cursor-ew-resize bg-white/20" />
-      <div onMouseDown={useEdgeDrag(clip, pxPerSecond, "right", updateClip)} className="absolute right-0 top-0 h-full w-1.5 cursor-ew-resize bg-white/20" />
+      <div onMouseDown={useEdgeDrag(clip, pxPerSecond, "left", updateClip)} className="absolute left-0 top-0 h-full w-1.5 cursor-ew-resize bg-white/10 hover:bg-white/25" />
+      <div onMouseDown={useEdgeDrag(clip, pxPerSecond, "right", updateClip)} className="absolute right-0 top-0 h-full w-1.5 cursor-ew-resize bg-white/10 hover:bg-white/25" />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { randomUUID } from "../lib/uuid";
 import { useProjectStore } from "../store/projectStore";
 import { TrackHeader } from "./TrackHeader";
@@ -21,14 +22,15 @@ export function TrackList() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex w-60 shrink-0 flex-col border-r border-studio-border">
       {[...tracks]
         .sort((a, b) => a.orderIndex - b.orderIndex)
         .map((t, i) => (
           <TrackHeader key={t.id} track={t} index={i} />
         ))}
       <Button variant="secondary" className="m-2" onClick={handleAdd}>
-        + Ajouter une piste
+        <Plus className="size-4" />
+        Ajouter une piste
       </Button>
     </div>
   );

@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-04T00:00:00Z",
+  "title": "Design System: Edito",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Console Orange", "canonical": "#f97316", "tonalRamp": ["#1a0f04", "#4d2607", "#7a3a0b", "#a84f10", "#d66815", "#f97316", "#fb9750", "#fdc999"] },
+      "console-meter": { "role": "accent", "displayName": "Meter Teal", "canonical": "#4dd0e1", "tonalRamp": ["#0b2226", "#153c42", "#1f555e", "#2a5a61", "#3aa4b3", "#4dd0e1", "#8adfe9", "#c6eff4"] },
+      "console-meter-dim": { "role": "accent-dim", "displayName": "Dimmed Meter Teal", "canonical": "#2a5a61", "tonalRamp": ["#0a1b1e", "#122c30", "#1c4247", "#2a5a61", "#3d7d86", "#5aa3ac", "#8ec6cc", "#c9e6e9"] },
+      "console-mute": { "role": "track-state", "displayName": "Console Mute Amber", "canonical": "#f5b544", "tonalRamp": ["#241704", "#472d08", "#6f480d", "#9c6613", "#c6851c", "#f5b544", "#f8c977", "#fbdfab"] },
+      "studio-bg": { "role": "neutral", "displayName": "Chassis Black", "canonical": "#111215", "tonalRamp": ["#050506", "#0b0c0e", "#111215", "#1c1d21", "#2a2c31", "#34363c", "#4d4f57", "#9a9ca3"] },
+      "studio-panel": { "role": "neutral", "displayName": "Brushed Panel", "canonical": "#1c1d21", "tonalRamp": ["#050506", "#0b0c0e", "#111215", "#1c1d21", "#2a2c31", "#34363c", "#4d4f57", "#9a9ca3"] },
+      "studio-border": { "role": "neutral", "displayName": "Hairline Seam", "canonical": "#34363c", "tonalRamp": ["#111215", "#1c1d21", "#24262b", "#2a2c31", "#34363c", "#4d4f57", "#6f727a", "#9a9ca3"] },
+      "console-inset": { "role": "neutral-recessed", "displayName": "Console Inset", "canonical": "#0b0c0e", "tonalRamp": ["#000000", "#0b0c0e", "#111215", "#1c1d21", "#2a2c31", "#34363c", "#4d4f57", "#9a9ca3"] },
+      "destructive": { "role": "hazard", "displayName": "Record Hazard Red", "canonical": "#ef4444", "tonalRamp": ["#200404", "#4a0a0a", "#7a1414", "#ab1f1f", "#d63030", "#ef4444", "#f37c7c", "#f9b8b8"] },
+      "track-1": { "role": "track-identity", "displayName": "Track Orange", "canonical": "#f97316", "tonalRamp": ["#1a0f04", "#4d2607", "#7a3a0b", "#a84f10", "#d66815", "#f97316", "#fb9750", "#fdc999"] },
+      "track-2": { "role": "track-identity", "displayName": "Track Cyan", "canonical": "#22d3ee", "tonalRamp": ["#062a30", "#0c4a55", "#136a7a", "#1a8fa3", "#22d3ee", "#5fe0f2", "#9aebf7", "#cff6fb"] },
+      "track-3": { "role": "track-identity", "displayName": "Track Violet", "canonical": "#a78bfa", "tonalRamp": ["#241a4a", "#3d2c7a", "#573fab", "#7862d6", "#a78bfa", "#c1abfc", "#dbcafd", "#efe4fe"] },
+      "track-4": { "role": "track-identity", "displayName": "Track Green", "canonical": "#4ade80", "tonalRamp": ["#0c2c17", "#154a26", "#1f6c37", "#2e9750", "#4ade80", "#7fe8a6", "#b3f2ca", "#dcf9e6"] },
+      "track-5": { "role": "track-identity", "displayName": "Track Pink", "canonical": "#f472b6", "tonalRamp": ["#3a0f23", "#631a3b", "#8f2555", "#c23675", "#f472b6", "#f89cce", "#fbc4e2", "#fde3f1"] },
+      "track-6": { "role": "track-identity", "displayName": "Track Yellow", "canonical": "#facc15", "tonalRamp": ["#332905", "#5c4a09", "#8a6f0e", "#b99513", "#facc15", "#fbdb5c", "#fdea9c", "#fef6d1"] }
+    },
+    "typographyMeta": {
+      "readout": { "displayName": "LCD Readout", "purpose": "Transport clock and any live numeric value; teal, tabular-nums, mono." },
+      "readout-small": { "displayName": "Inline Readout", "purpose": "Fader percentage, pan value, clip name overlay." },
+      "label": { "displayName": "Label", "purpose": "Track names, button text, section titles." }
+    },
+    "shadows": [
+      { "name": "active-glow-primary", "value": "0 0 10px rgba(249,115,22,0.55)", "purpose": "Marks a genuinely live/armed control state (playing, soloed)." },
+      { "name": "selection-ring", "value": "0 0 0 1px rgba(249,115,22,0.4)", "purpose": "Marks the currently selected clip on the timeline." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Play)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Icon-only transport play/pause control; glows while playing.",
+      "html": "<button class=\"ds-btn-icon ds-btn-primary\" aria-pressed=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M6 4l14 8-14 8V4z\"/></svg></button>",
+      "css": ".ds-btn-icon.ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 6px; background: #f97316; color: #1a0f04; border: none; box-shadow: 0 0 10px rgba(249,115,22,0.55); transition: background 0.15s; } .ds-btn-icon.ds-btn-primary:hover { background: #ea690f; } .ds-btn-icon.ds-btn-primary:focus-visible { outline: 1px solid #f97316; outline-offset: 1px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default action button (Enregistrer, Exporter, Ajouter une piste).",
+      "html": "<button class=\"ds-btn-secondary\">Exporter le mixdown</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 8px 16px; border-radius: 6px; background: #2a2c31; color: #f0efec; border: none; font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.3); transition: background 0.15s; } .ds-btn-secondary:hover { background: rgba(42,44,49,0.8); } .ds-btn-secondary:focus-visible { outline: 1px solid #f97316; outline-offset: 1px; }"
+    },
+    {
+      "name": "Destructive Button (Recording)",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Record toggle while recording is active; pulses.",
+      "html": "<button class=\"ds-btn-destructive\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><rect x=\"6\" y=\"6\" width=\"12\" height=\"12\"/></svg> Arrêter l'enregistrement</button>",
+      "css": ".ds-btn-destructive { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 8px 16px; border-radius: 6px; background: #ef4444; color: #200404; border: none; font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; font-weight: 500; animation: ds-pulse 1.5s ease-in-out infinite; } .ds-btn-destructive:hover { background: rgba(239,68,68,0.9); } @keyframes ds-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }"
+    },
+    {
+      "name": "LCD Readout Panel",
+      "kind": "custom",
+      "refersTo": "readout-panel",
+      "description": "Recessed panel showing the transport clock in mono teal, tabular-nums.",
+      "html": "<div class=\"ds-readout\">00:12.450</div>",
+      "css": ".ds-readout { display: inline-block; background: #0b0c0e; border: 1px solid #34363c; border-radius: 6px; padding: 4px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; letter-spacing: 0.05em; font-variant-numeric: tabular-nums; color: #4dd0e1; }"
+    },
+    {
+      "name": "Mute / Solo Toggle",
+      "kind": "custom",
+      "refersTo": "channel-strip",
+      "description": "Two-state hardware toggle switch used for per-track Mute and Solo; Solo-active reuses the primary accent, Mute-active uses the dedicated console-mute amber token (see Mute-Is-Amber Rule) so the two toggles are never confusable.",
+      "html": "<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:6px;width:200px\"><button class=\"ds-toggle ds-toggle-mute-active\">Muet</button><button class=\"ds-toggle ds-toggle-solo-active\">Solo</button></div>",
+      "css": ".ds-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border-radius: 6px; border: 1px solid #34363c; background: #0b0c0e; color: #9a9ca3; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; font-weight: 600; transition: background 0.15s; } .ds-toggle:hover { background: rgba(52,54,60,0.6); } .ds-toggle-mute-active { border-color: #f5b544; background: #f5b544; color: #241704; } .ds-toggle-solo-active { border-color: #f97316; background: #f97316; color: #1a0f04; box-shadow: 0 0 8px rgba(249,115,22,0.55); }"
+    },
+    {
+      "name": "Channel Strip",
+      "kind": "custom",
+      "refersTo": "channel-strip",
+      "description": "Fixed-size hardware track unit: color edge, name row, volume/pan sliders, mute/solo row.",
+      "html": "<div class=\"ds-strip\"><span class=\"ds-strip-edge\"></span><div class=\"ds-strip-body\"><div class=\"ds-strip-name\">Piste 1</div><div class=\"ds-strip-row\"><div class=\"ds-track-fill\"></div><span class=\"ds-strip-value\">100%</span></div></div></div>",
+      "css": ".ds-strip { position: relative; height: 160px; width: 240px; background: #1c1d21; border-bottom: 1px solid #34363c; } .ds-strip-edge { position: absolute; inset: 0 auto 0 0; width: 6px; background: #f97316; } .ds-strip-body { padding: 8px 8px 8px 16px; display: flex; flex-direction: column; gap: 8px; height: 100%; } .ds-strip-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; font-weight: 500; color: #f0efec; } .ds-strip-row { display: flex; align-items: center; gap: 8px; } .ds-track-fill { height: 6px; flex: 1; border-radius: 9999px; background: rgba(249,115,22,0.2); } .ds-strip-value { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9a9ca3; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Timeline Clip",
+      "kind": "custom",
+      "refersTo": "channel-strip",
+      "description": "Waveform clip on the graticule timeline; inset toned block with mono label and drag handles.",
+      "html": "<div class=\"ds-clip\"><span class=\"ds-clip-label\">clip_01.wav</span><div class=\"ds-clip-handle ds-clip-handle-left\"></div><div class=\"ds-clip-handle ds-clip-handle-right\"></div></div>",
+      "css": ".ds-clip { position: relative; height: 96px; width: 220px; background: #0b0c0e; border: 1px solid #34363c; border-radius: 6px; overflow: hidden; } .ds-clip-label { position: absolute; left: 6px; top: 4px; z-index: 1; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9a9ca3; background: rgba(17,18,21,0.7); padding: 0 4px; border-radius: 2px; } .ds-clip-handle { position: absolute; top: 0; height: 100%; width: 6px; background: rgba(255,255,255,0.1); cursor: ew-resize; } .ds-clip-handle:hover { background: rgba(255,255,255,0.25); } .ds-clip-handle-left { left: 0; } .ds-clip-handle-right { right: 0; }"
+    },
+    {
+      "name": "Slider",
+      "kind": "input",
+      "refersTo": "button-ghost",
+      "description": "Volume/pan slider used in channel strips; thin orange-filled track with circular thumb.",
+      "html": "<div class=\"ds-slider\"><div class=\"ds-slider-track\"><div class=\"ds-slider-range\"></div></div><div class=\"ds-slider-thumb\"></div></div>",
+      "css": ".ds-slider { position: relative; display: flex; align-items: center; width: 100%; height: 16px; } .ds-slider-track { position: relative; height: 6px; width: 100%; border-radius: 9999px; background: rgba(249,115,22,0.2); overflow: hidden; } .ds-slider-range { position: absolute; height: 100%; width: 66%; background: #f97316; } .ds-slider-thumb { position: absolute; left: 66%; width: 16px; height: 16px; border-radius: 9999px; background: #111215; border: 1px solid rgba(249,115,22,0.5); box-shadow: 0 1px 2px rgba(0,0,0,0.4); transform: translateX(-50%); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Channel Rack",
+    "overview": "Edito is built as a hardware mixing console: a charcoal chassis with brushed-panel surfaces, printed hairline seams between sections, and physical-feeling controls (faders, toggle switches, an LCD-style time readout) rather than webpage widgets pretending to be studio gear. The interface is dense, always-dark, and legible at a glance — every state (playing, recording, muted, soloed, saved) reads instantly from color and position alone, because the sole user reads it hundreds of times a session with no time to interpret ambiguity. The palette is disciplined to a single accent: console-orange for action and record states, teal reserved exclusively for meters and time readouts. Everything else is charcoal neutrals and hairline borders. Two type families do all the work — IBM Plex Mono for every numeric readout (time, percentages, pan values), IBM Plex Sans for every label — so a glance at a glyph's shape tells the owner whether they're looking at a value or a name before they've even read it.",
+    "keyCharacteristics": [
+      "Charcoal chassis with brushed-panel surfaces and hairline seams (`border-studio-border`), never open whitespace",
+      "One accent color (console-orange) for action/record/selection state; teal is a reserved meter-and-readout color, never a general accent",
+      "Mono for numbers, Sans for words — no exceptions",
+      "Toolbar sections separated by physical 1px dividers (`h-6 w-px bg-studio-border`), not spacing alone",
+      "Flat, inset, and bordered surfaces stand in for shadows — this is a panel-and-seam world, not a lifted-card world"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Console-orange is the only color that means \"action, recording, or active selection.\" If a new control needs an active state, it reaches for orange or it isn't done — a second warm accent (amber, red-outside-destructive, etc.) is a system violation, not a variant.", "section": "colors" },
+      { "name": "The Meter-Only Teal Rule", "body": "Teal (#4dd0e1 console-meter / #2a5a61 console-meter-dim) is reserved for the LCD time readout and waveform rendering. It never appears on an interactive control (buttons, toggles, links); if teal shows up on something clickable, that's a build defect, not a new use case.", "section": "colors" },
+      { "name": "The Mute-Is-Amber Rule", "body": "Mute's active state uses console-mute (amber, #f5b544 / foreground #241704), Solo's active state reuses the primary console-orange accent — the two toggles must never share a color. This is a deliberate, named exception to the One Accent Rule: it governs the Mute/Solo track-state toggle pair specifically, not action/brand color.", "section": "colors" },
+      { "name": "The Digits-Are-Mono Rule", "body": "Any value that changes at runtime or represents a measurement — time, volume percent, pan position, clip labels — renders in IBM Plex Mono with tabular-nums. Any value that names something — a track, a button, a menu item — renders in IBM Plex Sans.", "section": "typography" },
+      { "name": "The Inset-Not-Lifted Rule", "body": "Depth is conveyed by recession (console-inset wells for readouts, clip bodies, status pills), never by elevation. Nothing in this system casts a resting drop shadow to look \"raised\"; a shadow only ever appears as a live-state glow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put every runtime number and code value in IBM Plex Mono with tabular-nums; every label and name in IBM Plex Sans.",
+      "Do separate control groups within a toolbar or transport bar with a literal h-6 w-px bg-studio-border divider, not extra gutter.",
+      "Do use bg-console-inset for any recessed/LCD-like readout surface (clock, status pill, control well, clip body).",
+      "Do reserve the active-glow box-shadow (shadow-[0_0_Npx_rgba(249,115,22,0.55)]) for genuinely live/armed states (playing, soloed), not resting emphasis.",
+      "Do keep the channel strip at a fixed h-40 w-60 footprint; it is a hardware unit, not a flexible card.",
+      "Do use console-mute/console-mute-foreground for Mute's active state and primary/primary-foreground for Solo's active state — never swap them or let either toggle borrow the other's color."
+    ],
+    "donts": [
+      "Don't introduce a second general-purpose action/brand accent color. Console orange is the only \"this is active/actionable\" color for buttons and brand controls; red is reserved solely for the recording-hazard state. (Does not apply to the Mute/Solo track-toggle pair — see the Mute-Is-Amber Rule.)",
+      "Don't use teal (console-meter/console-meter-dim) on anything clickable — it is a meter/readout color only.",
+      "Don't add a resting drop-shadow to imply elevation; depth in this system comes from recession (inset backgrounds) and hairline borders, never a lifted-card shadow.",
+      "Don't add uppercase, letter-spaced \"kicker\" or \"eyebrow\" labels anywhere — no label in the shipped build uses that treatment, and it doesn't belong to this instrument-panel voice.",
+      "Don't reach for a raw Tailwind color utility (e.g. amber-400, amber-500) for any new UI state. Every color used in a component must resolve to a declared token (console-mute, primary, destructive, etc.); an un-tokenized literal is a build defect regardless of hue."
+    ]
+  }
+}

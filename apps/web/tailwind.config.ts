@@ -13,6 +13,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"IBM Plex Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ['"IBM Plex Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -45,7 +49,10 @@ export default {
           DEFAULT: "var(--accent)",
           foreground: "var(--accent-foreground)",
         },
-        destructive: "var(--destructive)",
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
@@ -67,9 +74,16 @@ export default {
           ring: "var(--sidebar-ring)",
         },
         studio: {
-          bg: "#0a0a0c",
-          panel: "#141417",
-          border: "#26262b",
+          bg: "#111215",
+          panel: "#1c1d21",
+          border: "#34363c",
+        },
+        console: {
+          inset: "#0b0c0e",
+          meter: "#4dd0e1",
+          "meter-dim": "#2a5a61",
+          mute: "#f5b544",
+          "mute-foreground": "#241704",
         },
         track: {
           1: "#f97316",

@@ -1,0 +1,130 @@
+{
+  "title": "Choisis le monde visuel d'Edito",
+  "question": "Le tirage assigne Signal Bench. Garde-le, prends une alternative, ou relance.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Signal Bench",
+      "kicker": "THE ROLL",
+      "lineage": "oscilloscope et banc d'instruments de labo audio",
+      "thesis": "Edito se lit comme du matériel de banc d'essai calibré : chaque état est une mesure lisible, jamais une devinette.",
+      "palette": ["#0a0b0d", "#d7dbdc", "#39ff8f", "#ff4d4d"],
+      "materials": ["châssis mat brossé", "sérigraphie de panneau", "rémanence phosphore"],
+      "viewport": "Grille graticule d'oscilloscope sous la timeline, formes d'onde en tracés phosphore vert, chaque piste = un module d'instrument avec interrupteurs à bascule et un petit VU-mètre.",
+      "risk": "Peut paraître froid si la lueur verte est utilisée partout au lieu d'être réservée au signal actif.",
+      "raised": [
+        {"from": "challenger-botanical", "raise": "Chaque forme d'onde, mètre et clip se dessine à une échelle fixe (même px/seconde, même px/dB) jamais re-mise à l'échelle en silence : deux pistes restent toujours honnêtement comparables."},
+        {"from": "challenger-elbow", "raise": "La couleur la plus chaude (rouge) est réservée au seul état vraiment critique (enregistrement armé), pour qu'aucun autre élément ne lui fasse concurrence."}
+      ],
+      "wireframe": {
+        "cols": 12, "rows": 10,
+        "regions": [
+          {"label": "barre transport / instruments", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true},
+          {"label": "module piste (fader, switches, VU)", "x": 0, "y": 2, "w": 2, "h": 8},
+          {"label": "timeline / graticule + tracés", "x": 2, "y": 2, "w": 10, "h": 8, "accent": true}
+        ]
+      }
+    },
+    {
+      "id": "model-pick",
+      "label": "Channel Rack",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "console de mixage hardware / rack de patch",
+      "thesis": "Edito se manipule comme une console que tu connais déjà : une tranche de canal par piste, des faders et des switches, pas des icônes plates.",
+      "palette": ["#1a1b1e", "#8b8d92", "#ff7a3d", "#4dd0e1"],
+      "materials": ["aluminium brossé", "switches caoutchoutés", "capots de tranche imprimés"],
+      "viewport": "Tranches de canal verticales à gauche (fader de volume, potard de pan, bascules mute/solo, aiguille VU miniature), timeline à droite.",
+      "risk": "C'est la direction que prendrait n'importe quel éditeur audio — le choix sûr et attendu.",
+      "wireframe": {
+        "cols": 12, "rows": 10,
+        "regions": [
+          {"label": "tranches de canal (fader/pan/switch)", "x": 0, "y": 1, "w": 3, "h": 9, "accent": true},
+          {"label": "timeline", "x": 3, "y": 1, "w": 9, "h": 9},
+          {"label": "transport", "x": 0, "y": 0, "w": 12, "h": 1}
+        ]
+      }
+    },
+    {
+      "id": "challenger-jackfield",
+      "label": "Patch Bay Ledger",
+      "verdict": "wins",
+      "lineage": "jackfield de studio, tableau de normalisation",
+      "thesis": "Chaque piste et chaque clip est une ligne numérotée sur un tableau de patch ; l'état se lit dans le tracé du lien, jamais dans la seule couleur.",
+      "palette": ["#0c0d0f", "#ffb020", "#e8e6df"],
+      "materials": ["verre rétro-éclairé noir", "trait ambre gravé", "encre à la main"],
+      "viewport": "Pistes numérotées 01–08 sur une légende fixe à gauche ; chaque piste/clip porte un trait de liaison : plein = en lecture, croisé = muet, coupé = vide, doublé = sélectionné, anneau ouvert = suppression en attente.",
+      "case": "Fusion très propre : mute / solo / sélection / suppression d'Edito se mappent un-à-un sur les cinq tracés de lien — règle direct le problème de boutons invisibles du bouton actuel, sans jamais dépendre d'une teinte.",
+      "risk": "Peut paraître sévère si l'ambre unique n'est pas réchauffé par la vraie couleur des formes d'onde à l'intérieur des pistes.",
+      "wireframe": {
+        "cols": 12, "rows": 10,
+        "regions": [
+          {"label": "légende numéros de piste", "x": 0, "y": 1, "w": 1, "h": 9},
+          {"label": "lane 01–08 + tracés de lien", "x": 1, "y": 1, "w": 11, "h": 9, "accent": true},
+          {"label": "transport", "x": 0, "y": 0, "w": 12, "h": 1}
+        ]
+      }
+    },
+    {
+      "id": "challenger-sixpack",
+      "label": "Night Instruments",
+      "verdict": "competitive",
+      "lineage": "planche de bord d'avion de nuit, six cadrans",
+      "thesis": "Six instruments de confiance que tu balaies du regard, pas un mur de sliders identiques.",
+      "palette": ["#101114", "#f2f0e6", "#8fe388"],
+      "materials": ["panneau anodisé mat", "peinture lumineuse", "aiguilles amorties"],
+      "viewport": "Un petit cluster d'instruments en haut (position, niveau de sortie, crête, état de sauvegarde) ; chaque piste se réduit à un résumé en cadran plutôt qu'à une tranche complète.",
+      "case": "Tient sur l'identification (registre instrument de confiance proche de Signal Bench) mais perd en clarté à l'échelle : six cadrans fixes ne s'étendent pas bien à un nombre de pistes variable.",
+      "risk": "Élégant pour une poignée de pistes, étouffé au-delà d'une huitaine.",
+      "wireframe": {
+        "cols": 12, "rows": 10,
+        "regions": [
+          {"label": "cluster de 6 cadrans", "x": 0, "y": 0, "w": 12, "h": 3, "accent": true},
+          {"label": "pistes en résumé cadran", "x": 0, "y": 3, "w": 12, "h": 7}
+        ]
+      }
+    },
+    {
+      "id": "challenger-botanical",
+      "label": "Botanical Folio",
+      "verdict": "declined",
+      "lineage": "planches botaniques gravées, séquence saisonnière",
+      "case": "Fusion faible : un game dev qui monte des SFX ne s'identifie pas à des planches botaniques gravées, et la logique « une étape à la fois » va contre le besoin de tout voir en même temps sur une timeline multipiste.",
+      "kept": "La discipline d'échelle fixe entre planches, donnée à Signal Bench."
+    },
+    {
+      "id": "challenger-elbow",
+      "label": "Elbow Panel Console",
+      "verdict": "declined",
+      "lineage": "panneau mural de vaisseau spatial, coins pastel",
+      "case": "Fusion faible : les blocs pastel plats évoquent l'interface d'un jeu lui-même plus que l'outil qui sert à le fabriquer, et les pavés numériques ne portent pas bien des clips audio de longueur variable.",
+      "kept": "La règle d'accent chaud réservé à un seul état, donnée à Signal Bench."
+    },
+    {
+      "id": "challenger-raingarden",
+      "label": "Gravity Rain Garden",
+      "verdict": "declined",
+      "lineage": "jardin de pluie à gravité variable, monde onéirique",
+      "case": "Fusion faible : un jardin physique surréaliste va frontalement contre la lisibilité dont a besoin une session de montage concentrée."
+    },
+    {
+      "id": "challenger-cape",
+      "label": "Drawcord Cape",
+      "verdict": "declined",
+      "lineage": "cape en soie à cordon de serrage transformable",
+      "case": "Fusion faible : un geste de transformation unique ne s'étend pas à une surface dense avec de nombreux éléments indépendants simultanés.",
+      "kept": "La convention d'états nommés explicitement (plat / groupé / tendu...)."
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "canonCard": {
+    "label": "Le DAW sombre générique",
+    "thesis": "Ce que ship n'importe quel éditeur audio : fond noir, forme d'onde néon, sliders gris, exécuté proprement.",
+    "palette": ["#121212", "#1e1e1e", "#00d4ff"],
+    "materials": ["icônes vectorielles génériques", "sliders standards"],
+    "viewport": "Barre d'outils + liste de pistes + forme d'onde, sans identité propre.",
+    "risk": "Indiscernable de tous les autres outils audio — exactement l'ornière que cette refonte doit éviter."
+  },
+  "steer": true
+}

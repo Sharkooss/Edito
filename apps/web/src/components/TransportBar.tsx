@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Pause, Play, Square } from "lucide-react";
 import type { Transport } from "../audio/transport";
 import { formatTime } from "../lib/time";
 import { Button } from "./ui/button";
@@ -19,10 +20,27 @@ export function TransportBar({
   useEffect(() => transport.onTimeUpdate(setTime), [transport]);
 
   return (
-    <div className="flex items-center gap-2 border-b border-studio-border bg-studio-panel p-2">
-      <Button onClick={onTogglePlayPause} aria-pressed={isPlaying}>{isPlaying ? "Pause" : "Play"}</Button>
-      <Button variant="outline" onClick={onStop}>Stop</Button>
-      <span className="font-mono text-sm tabular-nums">{formatTime(time)}</span>
+    <div className="flex items-center gap-3 border-b border-studio-border bg-studio-panel px-3 py-2">
+      <div className="flex gap-1">
+        <Button
+          size="icon"
+          onClick={onTogglePlayPause}
+          aria-pressed={isPlaying}
+          title={isPlaying ? "Pause" : "Lecture"}
+          className={isPlaying ? "shadow-[0_0_10px_rgba(249,115,22,0.55)]" : ""}
+        >
+          {isPlaying ? <Pause className="size-4 fill-current" /> : <Play className="size-4 fill-current" />}
+        </Button>
+        <Button size="icon" variant="secondary" onClick={onStop} title="Stop">
+          <Square className="size-4 fill-current" />
+        </Button>
+      </div>
+
+      <div className="rounded-md border border-studio-border bg-console-inset px-3 py-1">
+        <span className="font-mono text-sm tabular-nums tracking-wider text-console-meter">
+          {formatTime(time)}
+        </span>
+      </div>
     </div>
   );
 }
