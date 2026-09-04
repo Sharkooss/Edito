@@ -3,6 +3,14 @@ import type { Config } from "tailwindcss";
 export default {
   darkMode: "class",
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  safelist: [
+    "bg-track-1",
+    "bg-track-2",
+    "bg-track-3",
+    "bg-track-4",
+    "bg-track-5",
+    "bg-track-6",
+  ],
   theme: {
     extend: {
       borderRadius: {

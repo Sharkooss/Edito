@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { Track, Clip, MediaDTO } from "../api/client";
 
+export type { Track, Clip, MediaDTO };
+
 interface ProjectStoreState {
   tracks: Track[];
   clips: Clip[];
