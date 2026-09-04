@@ -8,7 +8,7 @@ import { decodeAudioFile } from "./audio/import";
 import { AudioEngine } from "./audio/engine";
 import { useEngineSync } from "./audio/useEngineSync";
 import { Transport } from "./audio/transport";
-import { uploadMedia } from "./api/client";
+import { uploadMedia, fetchProject } from "./api/client";
 import { randomUUID } from "./lib/uuid";
 import { MicRecorder, requestMicStream } from "./audio/record";
 
@@ -18,13 +18,19 @@ const transport = new Transport(audioEngine);
 const getBufferUrl = (mediaId: string) => `/api/media/${mediaId}`;
 
 export default function App() {
-  const { tracks, addTrack, addMedia, addClip } = useProjectStore();
+  const { tracks, addTrack, addMedia, addClip, loadState } = useProjectStore();
   useEngineSync(audioEngine);
   const [currentTime, setCurrentTime] = useState(0);
   const [micRecorder, setMicRecorder] = useState<MicRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => transport.onTimeUpdate(setCurrentTime), []);
+
+  useEffect(() => {
+    fetchProject().then((state) => {
+      loadState({ tracks: state.tracks, clips: state.clips, media: state.media });
+    });
+  }, []);
 
   async function handleImport(file: File) {
     const buffer = await decodeAudioFile(file, audioCtx);
