@@ -4,6 +4,7 @@ import { TrackList } from "./components/TrackList";
 import { TimelineCanvas } from "./components/TimelineCanvas";
 import { TransportBar } from "./components/TransportBar";
 import { useProjectStore } from "./store/projectStore";
+import { useHistoryStore } from "./store/historyStore";
 import { decodeAudioFile } from "./audio/import";
 import { AudioEngine } from "./audio/engine";
 import { useEngineSync } from "./audio/useEngineSync";
@@ -13,6 +14,8 @@ import { randomUUID } from "./lib/uuid";
 import { MicRecorder, requestMicStream } from "./audio/record";
 import { useAutosave } from "./lib/useAutosave";
 import { renderMixdown, audioBufferToWav } from "./audio/export";
+import { deleteClipWithHistory } from "./audio/clipEditing";
+import { useKeyboardShortcuts } from "./lib/keyboard";
 
 const audioCtx = new AudioContext();
 const audioEngine = new AudioEngine(audioCtx);
@@ -34,6 +37,23 @@ export default function App() {
       loadState({ tracks: state.tracks, clips: state.clips, media: state.media });
     });
   }, []);
+
+  useKeyboardShortcuts({
+    onPlayPause: () => {
+      if (transport.isPlaying()) {
+        transport.pause();
+      } else {
+        transport.play(useProjectStore.getState().clips, useProjectStore.getState().tracks, getBufferUrl);
+      }
+    },
+    onDelete: () => {
+      const { clips, selectedClipId } = useProjectStore.getState();
+      const clip = clips.find((c) => c.id === selectedClipId);
+      if (clip) deleteClipWithHistory(clip);
+    },
+    onUndo: () => useHistoryStore.getState().undo(),
+    onRedo: () => useHistoryStore.getState().redo(),
+  });
 
   async function handleImport(file: File) {
     const buffer = await decodeAudioFile(file, audioCtx);
