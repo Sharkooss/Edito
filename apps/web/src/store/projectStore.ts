@@ -8,6 +8,7 @@ interface ProjectStoreState {
   clips: Clip[];
   media: MediaDTO[];
   selectedClipId: string | null;
+  hydrated: boolean;
   loadState: (s: { tracks: Track[]; clips: Clip[]; media: MediaDTO[] }) => void;
   addTrack: (track: Track) => void;
   removeTrack: (id: string) => void;
@@ -25,7 +26,8 @@ export const useProjectStore = create<ProjectStoreState>((set) => ({
   clips: [],
   media: [],
   selectedClipId: null,
-  loadState: (s) => set({ tracks: s.tracks, clips: s.clips, media: s.media }),
+  hydrated: false,
+  loadState: (s) => set({ tracks: s.tracks, clips: s.clips, media: s.media, hydrated: true }),
   addTrack: (track) => set((s) => ({ tracks: [...s.tracks, track] })),
   removeTrack: (id) =>
     set((s) => ({ tracks: s.tracks.filter((t) => t.id !== id), clips: s.clips.filter((c) => c.trackId !== id) })),

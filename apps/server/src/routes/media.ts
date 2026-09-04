@@ -70,6 +70,7 @@ export async function registerMediaRoutes(app: FastifyInstance, opts: { uploadsD
     const row = getDb().prepare("SELECT * FROM media WHERE id = ?").get(id) as any;
     if (!row) return reply.code(404).send({ error: "not found" });
     const filePath = join(uploadsDir, row.stored_filename);
+    if (!existsSync(filePath)) return reply.code(404).send({ error: "not found" });
     const stat = statSync(filePath);
     const size = stat.size;
     const rangeHeader = req.headers.range;

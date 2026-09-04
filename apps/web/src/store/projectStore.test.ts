@@ -3,7 +3,7 @@ import { useProjectStore } from "./projectStore";
 
 describe("projectStore", () => {
   beforeEach(() => {
-    useProjectStore.setState({ tracks: [], clips: [], media: [], selectedClipId: null });
+    useProjectStore.setState({ tracks: [], clips: [], media: [], selectedClipId: null, hydrated: false });
   });
 
   it("addTrack appends a track", () => {
@@ -38,5 +38,11 @@ describe("projectStore", () => {
     } as any);
     useProjectStore.getState().updateTrack("t1", { volume: 0.3 });
     expect(useProjectStore.getState().tracks[0].volume).toBe(0.3);
+  });
+
+  it("loadState sets hydrated to true", () => {
+    expect(useProjectStore.getState().hydrated).toBe(false);
+    useProjectStore.getState().loadState({ tracks: [], clips: [], media: [] });
+    expect(useProjectStore.getState().hydrated).toBe(true);
   });
 });

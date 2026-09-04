@@ -8,7 +8,7 @@ import { useAutosave } from "./useAutosave";
 describe("useAutosave", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    useProjectStore.setState({ tracks: [], clips: [] } as any);
+    useProjectStore.setState({ tracks: [], clips: [], hydrated: true } as any);
   });
 
   // Without this, a hook rendered in one test stays mounted (and subscribed
@@ -50,6 +50,29 @@ describe("useAutosave", () => {
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy.mock.calls[0][0].tracks).toHaveLength(3);
+    vi.useRealTimers();
+  });
+
+  it("does not save before hydration, but does after loadState hydrates the store", () => {
+    useProjectStore.setState({ tracks: [], clips: [], hydrated: false } as any);
+    const spy = vi.spyOn(client, "saveProject").mockResolvedValue();
+    renderHook(() => useAutosave(1000));
+
+    act(() => {
+      useProjectStore.getState().addTrack({ id: "t1", orderIndex: 0, name: "T", color: "", volume: 1, pan: 0, muted: false, soloed: false });
+    });
+    act(() => { vi.advanceTimersByTime(5000); });
+    expect(spy).not.toHaveBeenCalled();
+
+    act(() => {
+      useProjectStore.setState({ hydrated: true } as any);
+    });
+    act(() => {
+      useProjectStore.getState().addTrack({ id: "t2", orderIndex: 1, name: "T2", color: "", volume: 1, pan: 0, muted: false, soloed: false });
+    });
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(spy).toHaveBeenCalledTimes(1);
+
     vi.useRealTimers();
   });
 });

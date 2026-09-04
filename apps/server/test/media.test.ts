@@ -98,6 +98,16 @@ describe("media routes", () => {
     expect(res.statusCode).toBe(201);
   });
 
+  it("returns 404 (not a raw 500) when the media row exists but the file is missing on disk", async () => {
+    const db = getDb();
+    db.prepare(
+      "INSERT INTO media (id, original_filename, stored_filename, duration, sample_rate) VALUES ('missing1','ghost.wav','ghost-does-not-exist.wav', 3, 44100)"
+    ).run();
+    const app = buildApp();
+    const res = await app.inject({ method: "GET", url: "/api/media/missing1" });
+    expect(res.statusCode).toBe(404);
+  });
+
   it("returns audio/webm Content-Type when fetching a stored .webm recording", async () => {
     const app = buildApp();
     const form = new FormData();

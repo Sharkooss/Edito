@@ -12,6 +12,7 @@ export function getDb(): Database.Database {
   const dataDir = process.env.DATA_DIR ?? join(__dirname, "../../../data");
   db = new Database(join(dataDir, "edito.db"));
   db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
   const schema = readFileSync(join(__dirname, "db/schema.sql"), "utf-8");
   db.exec(schema);
   return db;
@@ -19,6 +20,7 @@ export function getDb(): Database.Database {
 
 export function resetDbForTests(): void {
   db = new Database(":memory:");
+  db.pragma("foreign_keys = ON");
   const schema = readFileSync(join(__dirname, "db/schema.sql"), "utf-8");
   db.exec(schema);
 }
