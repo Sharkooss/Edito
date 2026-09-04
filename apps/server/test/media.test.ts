@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import Fastify from "fastify";
 import multipart from "@fastify/multipart";
+import { existsSync, readdirSync, mkdirSync } from "node:fs";
 import { resetDbForTests, getDb } from "../src/db.js";
 import { registerMediaRoutes } from "../src/routes/media.js";
 
-function buildApp() {
+const UPLOADS_DIR = "/tmp/edito-test-uploads";
+
+function buildApp(opts?: { maxBytes?: number }) {
   const app = Fastify();
   app.register(multipart);
-  app.register(registerMediaRoutes, { uploadsDir: "/tmp/edito-test-uploads" });
+  app.register(registerMediaRoutes, { uploadsDir: "/tmp/edito-test-uploads", maxBytes: opts?.maxBytes });
   return app;
 }
 
@@ -36,5 +39,39 @@ describe("media routes", () => {
     const app = buildApp();
     const res = await app.inject({ method: "DELETE", url: "/api/media/m1" });
     expect(res.statusCode).toBe(409);
+  });
+
+  it("rejects uploads exceeding the size limit with 413 and leaves no trace", async () => {
+    if (!existsSync(UPLOADS_DIR)) mkdirSync(UPLOADS_DIR, { recursive: true });
+    const before = readdirSync(UPLOADS_DIR);
+
+    const app = buildApp({ maxBytes: 10 });
+    const form = new FormData();
+    form.append("file", new Blob([new Uint8Array(1000)], { type: "audio/wav" }), "big.wav");
+    const res = await app.inject({ method: "POST", url: "/api/media", payload: form as any });
+
+    expect(res.statusCode).toBe(413);
+    expect((getDb().prepare("SELECT COUNT(*) c FROM media").get() as any).c).toBe(0);
+    const after = readdirSync(UPLOADS_DIR);
+    expect(after.length).toBe(before.length);
+  });
+
+  it("honors a Range header with a 206 partial response", async () => {
+    const app = buildApp();
+    const form = new FormData();
+    form.append("file", new Blob(["abcdefgh"], { type: "audio/wav" }), "small.wav");
+    const uploadRes = await app.inject({ method: "POST", url: "/api/media", payload: form as any });
+    expect(uploadRes.statusCode).toBe(201);
+    const { id } = uploadRes.json();
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/media/${id}`,
+      headers: { range: "bytes=0-3" },
+    });
+
+    expect(res.statusCode).toBe(206);
+    expect(res.headers["content-range"]).toBeDefined();
+    expect(res.rawPayload.length).toBe(4);
   });
 });
