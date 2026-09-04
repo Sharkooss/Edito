@@ -5,10 +5,14 @@ export function Toolbar({
   onImport,
   isRecording,
   onToggleRecord,
+  saveStatus,
+  onRetrySave,
 }: {
   onImport: (file: File) => void;
   isRecording: boolean;
   onToggleRecord: () => void;
+  saveStatus?: "idle" | "saving" | "saved" | "error";
+  onRetrySave?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -40,6 +44,22 @@ export function Toolbar({
       <Button variant={isRecording ? "destructive" : "outline"} onClick={onToggleRecord}>
         {isRecording ? "■ Arrêter l'enregistrement" : "● Enregistrer"}
       </Button>
+      {saveStatus && (
+        <div className="ml-auto flex items-center gap-2">
+          {saveStatus === "error" ? (
+            <>
+              <span className="text-xs text-red-500">Erreur de sauvegarde</span>
+              <Button variant="outline" onClick={onRetrySave}>
+                Réessayer
+              </Button>
+            </>
+          ) : (
+            <span className="text-xs text-neutral-400">
+              {saveStatus === "saving" ? "Sauvegarde..." : saveStatus === "saved" ? "Sauvegardé" : ""}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

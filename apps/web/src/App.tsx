@@ -11,6 +11,7 @@ import { Transport } from "./audio/transport";
 import { uploadMedia, fetchProject } from "./api/client";
 import { randomUUID } from "./lib/uuid";
 import { MicRecorder, requestMicStream } from "./audio/record";
+import { useAutosave } from "./lib/useAutosave";
 
 const audioCtx = new AudioContext();
 const audioEngine = new AudioEngine(audioCtx);
@@ -23,6 +24,7 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState(0);
   const [micRecorder, setMicRecorder] = useState<MicRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const { status: saveStatus, saveNow } = useAutosave(2000);
 
   useEffect(() => transport.onTimeUpdate(setCurrentTime), []);
 
@@ -65,7 +67,13 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col bg-studio-bg text-neutral-100">
-      <Toolbar onImport={handleImport} isRecording={isRecording} onToggleRecord={handleToggleRecord} />
+      <Toolbar
+        onImport={handleImport}
+        isRecording={isRecording}
+        onToggleRecord={handleToggleRecord}
+        saveStatus={saveStatus}
+        onRetrySave={saveNow}
+      />
       <TransportBar transport={transport} getBufferUrl={getBufferUrl} />
       <div className="flex flex-1">
         <TrackList />
