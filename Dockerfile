@@ -4,6 +4,7 @@ WORKDIR /repo
 COPY package.json ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/server/package.json apps/server/package.json
+RUN apk add --no-cache python3 make g++
 RUN npm install
 COPY apps/web apps/web
 RUN npm run build -w apps/web
@@ -14,9 +15,11 @@ WORKDIR /repo
 COPY package.json ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/server/package.json apps/server/package.json
+RUN apk add --no-cache python3 make g++
 RUN npm install
 COPY apps/server apps/server
 RUN npm run build -w apps/server
+RUN npm prune --omit=dev
 
 # ---- Stage 3: runtime ----
 FROM node:20-alpine AS runtime
