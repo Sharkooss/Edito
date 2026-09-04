@@ -54,7 +54,10 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
     }
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp, { once: true });
-    return () => window.removeEventListener("mousemove", onMove);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
   }, [dragStartX, dragOriginal, clip.id, pxPerSecond, updateClip]);
 
   return (
