@@ -1,18 +1,22 @@
 import type { Track, Clip } from "../api/client";
 import type { MediaLibrary } from "./mediaLibrary";
+import type { ProcessedAudio } from "./processedAudio";
 import { computeSchedule, projectDuration, audibleTracks } from "./scheduling";
+import { buildClipChain } from "./clipChain";
+import { ImpulseCache } from "./impulseResponse";
 
 /**
  * Offline mixdown.
  *
- * Reads from the same MediaLibrary the editor plays through, and applies the
- * same chain — clip gain, fade ramps, track volume/pan, mute/solo — so what is
- * exported matches what was heard.
+ * Builds each clip through the very same `buildClipChain` the transport uses,
+ * so gain, fades, EQ, reverb and speed cannot drift between what was heard and
+ * what is exported.
  */
 export async function renderMixdown(
   clips: Clip[],
   tracks: Track[],
   library: Pick<MediaLibrary, "get" | "preload">,
+  processed: Pick<ProcessedAudio, "get" | "preload">,
   sampleRate: number,
 ): Promise<AudioBuffer> {
   const totalDuration = projectDuration(clips);
@@ -21,6 +25,7 @@ export async function renderMixdown(
   if (frames <= 0) return offlineCtx.startRendering();
 
   await library.preload(clips.map((c) => c.mediaId));
+  await processed.preload(clips);
 
   const audible = audibleTracks(tracks);
   const sourceDurations = new Map<string, number>();
@@ -31,12 +36,22 @@ export async function renderMixdown(
 
   // Playhead 0: `when` is then the clip's own start time on the timeline.
   const entries = computeSchedule(clips, 0, sourceDurations).filter((e) => audible.has(e.trackId));
+  const clipsById = new Map(clips.map((c) => [c.id, c]));
+
+  // Impulses belong to the context that will play them, so the offline render
+  // gets its own cache rather than borrowing the live one.
+  const impulses = new ImpulseCache(
+    (channels, length, rate) => offlineCtx.createBuffer(channels, length, rate),
+    sampleRate,
+  );
 
   const trackChains = new Map<string, GainNode>();
   for (const entry of entries) {
-    const buffer = library.get(entry.mediaId);
+    const clip = clipsById.get(entry.clipId);
     const track = tracks.find((t) => t.id === entry.trackId);
-    if (!buffer || !track) continue;
+    if (!clip || !track) continue;
+    const audio = processed.get(clip);
+    if (!audio) continue;
 
     let trackGain = trackChains.get(track.id);
     if (!trackGain) {
@@ -49,23 +64,7 @@ export async function renderMixdown(
       trackChains.set(track.id, trackGain);
     }
 
-    const startAt = entry.when;
-    const clipGain = offlineCtx.createGain();
-    const g = clipGain.gain;
-    const fadeIn = Math.min(entry.fadeIn, entry.duration);
-    g.setValueAtTime(fadeIn > 0 ? 0 : entry.gain, startAt);
-    if (fadeIn > 0) g.linearRampToValueAtTime(entry.gain, startAt + fadeIn);
-    if (entry.fadeOut > 0) {
-      const fadeOut = Math.min(entry.fadeOut, entry.duration);
-      g.setValueAtTime(entry.gain, startAt + Math.max(0, entry.duration - fadeOut));
-      g.linearRampToValueAtTime(0, startAt + entry.duration);
-    }
-    clipGain.connect(trackGain);
-
-    const source = offlineCtx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(clipGain);
-    source.start(startAt, entry.offset, entry.duration);
+    buildClipChain({ ctx: offlineCtx, impulses }, entry, audio, trackGain, entry.when);
   }
 
   return offlineCtx.startRendering();

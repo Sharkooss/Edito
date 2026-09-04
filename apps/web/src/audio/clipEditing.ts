@@ -3,6 +3,14 @@ import { useProjectStore } from "../store/projectStore";
 import { useHistoryStore } from "../store/historyStore";
 import { randomUUID } from "../lib/uuid";
 import { resolvePlacement } from "./overlap";
+import { normalizeGain } from "./normalize";
+import {
+  DEFAULT_EFFECTS,
+  durationForSpeed,
+  normalizeEffects,
+  serializeEffects,
+  type ClipEffects,
+} from "./effects";
 
 /** Below this, a clip is a click rather than audio. */
 export const MIN_CLIP_DURATION = 0.05;
@@ -179,13 +187,116 @@ export function setClipFade(id: string, edge: "in" | "out", seconds: number): vo
 }
 
 export function setClipGain(id: string, gain: number): void {
+  setClipsGain([id], gain);
+}
+
+export function setClipsGain(ids: string[], gain: number): void {
+  const targets = new Set(ids);
   commit(() => {
     const { clips } = useProjectStore.getState();
-    const clip = clips.find((c) => c.id === id);
-    if (!clip) return;
+    if (!clips.some((c) => targets.has(c.id))) return;
     const value = Math.max(0, Math.min(4, gain));
     useProjectStore.setState({
-      clips: clips.map((c) => (c.id === id ? { ...c, gain: value } : c)),
+      clips: clips.map((c) => (targets.has(c.id) ? { ...c, gain: value } : c)),
     });
+  });
+}
+
+export function setClipEffects(ids: string[], patch: Partial<ClipEffects>): void {
+  const targets = new Set(ids);
+  commit(() => {
+    const { clips } = useProjectStore.getState();
+    if (!clips.some((c) => targets.has(c.id))) return;
+    useProjectStore.setState({
+      clips: clips.map((c) =>
+        targets.has(c.id)
+          ? {
+              ...c,
+              effects: serializeEffects(
+                normalizeEffects({ ...normalizeEffects(c.effects), ...patch }),
+              ),
+            }
+          : c,
+      ),
+    });
+  });
+}
+
+/**
+ * Speed changes the clip's length on the timeline, so this cannot be a plain
+ * effects patch: the new length may collide with a neighbour, and the clip is
+ * then re-placed on the nearest free slot — the same rule drag already follows.
+ */
+export function setClipSpeed(ids: string[], speed: number): void {
+  if (!Number.isFinite(speed) || speed <= 0) return;
+  const targets = new Set(ids);
+  commit(() => {
+    let working = useProjectStore.getState().clips;
+    if (!working.some((c) => targets.has(c.id))) return;
+    for (const id of ids) {
+      const clip = working.find((c) => c.id === id);
+      if (!clip) continue;
+      const current = normalizeEffects(clip.effects);
+      const next = normalizeEffects({ ...current, speed });
+      const duration = durationForSpeed(clip.duration, current.speed, next.speed);
+      const startTime = resolvePlacement(
+        working,
+        clip.trackId,
+        clip.startTime,
+        duration,
+        new Set([clip.id]),
+      );
+      const updated = { ...clip, duration, startTime, effects: serializeEffects(next) };
+      working = working.map((c) => (c.id === id ? updated : c));
+    }
+    useProjectStore.setState({ clips: working });
+  });
+}
+
+export function resetClipEffects(ids: string[]): void {
+  const targets = new Set(ids);
+  commit(() => {
+    let working = useProjectStore.getState().clips;
+    if (!working.some((c) => targets.has(c.id))) return;
+    for (const id of ids) {
+      const clip = working.find((c) => c.id === id);
+      if (!clip) continue;
+      const current = normalizeEffects(clip.effects);
+      // Undoing a speed change restores the clip's unscaled length too.
+      const duration = durationForSpeed(clip.duration, current.speed, 1);
+      const startTime = resolvePlacement(
+        working,
+        clip.trackId,
+        clip.startTime,
+        duration,
+        new Set([clip.id]),
+      );
+      const updated = {
+        ...clip,
+        duration,
+        startTime,
+        effects: serializeEffects(DEFAULT_EFFECTS),
+      };
+      working = working.map((c) => (c.id === id ? updated : c));
+    }
+    useProjectStore.setState({ clips: working });
+  });
+}
+
+/** `peakOf` returns the clip's measured peak, or null when it cannot be measured. */
+export function normalizeClips(ids: string[], peakOf: (clip: Clip) => number | null): void {
+  const targets = new Set(ids);
+  commit(() => {
+    const { clips } = useProjectStore.getState();
+    let changed = false;
+    const next = clips.map((c) => {
+      if (!targets.has(c.id)) return c;
+      const peak = peakOf(c);
+      const gain = peak === null ? null : normalizeGain(peak);
+      if (gain === null) return c;
+      changed = true;
+      return { ...c, gain };
+    });
+    if (changed) useProjectStore.setState({ clips: next });
   });
 }

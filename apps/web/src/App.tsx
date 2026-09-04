@@ -13,6 +13,7 @@ import { useHistoryStore } from "./store/historyStore";
 import { decodeAudioFile } from "./audio/import";
 import { AudioEngine } from "./audio/engine";
 import { MediaLibrary } from "./audio/mediaLibrary";
+import { ProcessedAudio } from "./audio/processedAudio";
 import { useEngineSync } from "./audio/useEngineSync";
 import { Transport } from "./audio/transport";
 import { uploadMedia, fetchProject } from "./api/client";
@@ -28,7 +29,10 @@ import { useKeyboardShortcuts } from "./lib/keyboard";
 const audioCtx = new AudioContext();
 const audioEngine = new AudioEngine(audioCtx);
 const mediaLibrary = new MediaLibrary(audioCtx, (mediaId) => `/api/media/${mediaId}`);
-const transport = new Transport(audioEngine, mediaLibrary);
+const processedAudio = new ProcessedAudio(mediaLibrary, (channels, length, sampleRate) =>
+  audioCtx.createBuffer(channels, length, sampleRate),
+);
+const transport = new Transport(audioEngine, mediaLibrary, processedAudio);
 
 export default function App() {
   const { addMedia, addClip, loadState } = useProjectStore();
@@ -342,7 +346,7 @@ export default function App() {
         toast({ title: "Rien à exporter", description: "Le projet ne contient aucun clip." });
         return;
       }
-      const buffer = await renderMixdown(clips, tracks, mediaLibrary, 44100);
+      const buffer = await renderMixdown(clips, tracks, mediaLibrary, processedAudio, 44100);
       const url = URL.createObjectURL(audioBufferToWav(buffer));
       const a = document.createElement("a");
       a.href = url;
