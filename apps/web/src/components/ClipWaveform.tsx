@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import WaveSurfer from "wavesurfer.js";
 import { useProjectStore, type Clip } from "../store/projectStore";
-import { secondsToPixels } from "../lib/time";
+import { useHistoryStore } from "../store/historyStore";
+import { secondsToPixels, pixelsToSeconds } from "../lib/time";
 import { deleteClipWithHistory } from "../audio/clipEditing";
 
 export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: number }) {
@@ -9,6 +10,9 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
   const media = useProjectStore((s) => s.media.find((m) => m.id === clip.mediaId));
   const selectedClipId = useProjectStore((s) => s.selectedClipId);
   const selectClip = useProjectStore((s) => s.selectClip);
+  const updateClip = useProjectStore((s) => s.updateClip);
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+  const [dragOriginal, setDragOriginal] = useState<{ startTime: number; trackId: string } | null>(null);
 
   useEffect(() => {
     if (!containerRef.current || !media) return;
@@ -24,8 +28,38 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
     return () => ws.destroy();
   }, [media]);
 
+  function handleMouseDown(e: ReactMouseEvent) {
+    e.stopPropagation();
+    setDragStartX(e.clientX);
+    setDragOriginal({ startTime: clip.startTime, trackId: clip.trackId });
+    selectClip(clip.id);
+  }
+
+  useEffect(() => {
+    if (dragStartX === null || !dragOriginal) return;
+    function onMove(e: globalThis.MouseEvent) {
+      const deltaSeconds = pixelsToSeconds(e.clientX - dragStartX!, pxPerSecond);
+      updateClip(clip.id, { startTime: Math.max(0, dragOriginal!.startTime + deltaSeconds) });
+    }
+    function onUp() {
+      const finalStartTime = useProjectStore.getState().clips.find((c) => c.id === clip.id)!.startTime;
+      const original = dragOriginal!;
+      updateClip(clip.id, { startTime: original.startTime }); // revert, puis rejouer via l'historique
+      useHistoryStore.getState().push({
+        do: () => updateClip(clip.id, { startTime: finalStartTime }),
+        undo: () => updateClip(clip.id, { startTime: original.startTime }),
+      });
+      setDragStartX(null);
+      setDragOriginal(null);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp, { once: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [dragStartX, dragOriginal, clip.id, pxPerSecond, updateClip]);
+
   return (
     <div
+      onMouseDown={handleMouseDown}
       onClick={() => selectClip(clip.id)}
       onDoubleClick={() => deleteClipWithHistory(clip)}
       style={{ left: secondsToPixels(clip.startTime, pxPerSecond), width: secondsToPixels(clip.duration, pxPerSecond) }}
