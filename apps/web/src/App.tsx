@@ -29,9 +29,13 @@ export default function App() {
   const [micRecorder, setMicRecorder] = useState<MicRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [pxPerSecond, setPxPerSecond] = useState(100);
   const { status: saveStatus, saveNow } = useAutosave(2000);
 
   useEffect(() => transport.onTimeUpdate(setCurrentTime), []);
+
+  const zoomIn = () => setPxPerSecond((v) => Math.min(400, v * 1.25));
+  const zoomOut = () => setPxPerSecond((v) => Math.max(20, v / 1.25));
 
   async function togglePlayPause() {
     if (isPlaying) {
@@ -127,11 +131,13 @@ export default function App() {
         onExport={handleExport}
         saveStatus={saveStatus}
         onRetrySave={saveNow}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
       />
       <TransportBar transport={transport} isPlaying={isPlaying} onTogglePlayPause={togglePlayPause} onStop={stopPlayback} />
       <div className="flex flex-1">
         <TrackList />
-        <TimelineCanvas pxPerSecond={100} currentTime={currentTime} onSeek={(t) => transport.seek(t)} />
+        <TimelineCanvas pxPerSecond={pxPerSecond} currentTime={currentTime} onSeek={(t) => transport.seek(t)} />
       </div>
     </div>
   );

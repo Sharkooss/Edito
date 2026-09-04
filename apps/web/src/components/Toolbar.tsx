@@ -8,6 +8,8 @@ export function Toolbar({
   onExport,
   saveStatus,
   onRetrySave,
+  onZoomIn,
+  onZoomOut,
 }: {
   onImport: (file: File) => void;
   isRecording: boolean;
@@ -15,6 +17,8 @@ export function Toolbar({
   onExport: () => Promise<void>;
   saveStatus?: "idle" | "saving" | "saved" | "error";
   onRetrySave?: () => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -61,8 +65,16 @@ export function Toolbar({
       >
         {isExporting ? "Export en cours..." : "Exporter le mixdown"}
       </Button>
+      <div className="ml-auto flex gap-1">
+        <Button size="icon" variant="outline" onClick={onZoomOut}>
+          −
+        </Button>
+        <Button size="icon" variant="outline" onClick={onZoomIn}>
+          +
+        </Button>
+      </div>
       {saveStatus && (
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-2">
           {saveStatus === "error" ? (
             <>
               <span className="text-xs text-red-500">Erreur de sauvegarde</span>
