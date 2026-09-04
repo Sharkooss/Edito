@@ -23,6 +23,9 @@ export interface Clip {
   sourceOffset: number;
   duration: number;
   name: string;
+  gain: number;
+  fadeIn: number;
+  fadeOut: number;
 }
 
 export interface Media {

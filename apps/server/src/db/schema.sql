@@ -34,7 +34,10 @@ CREATE TABLE IF NOT EXISTS clip (
   start_time REAL NOT NULL,
   source_offset REAL NOT NULL DEFAULT 0,
   duration REAL NOT NULL,
-  name TEXT NOT NULL
+  name TEXT NOT NULL,
+  gain REAL NOT NULL DEFAULT 1,
+  fade_in REAL NOT NULL DEFAULT 0,
+  fade_out REAL NOT NULL DEFAULT 0
 );
 
 INSERT OR IGNORE INTO project (id) VALUES (1);
