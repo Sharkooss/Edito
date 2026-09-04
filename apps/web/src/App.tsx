@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
-import { Info } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Info, UploadCloud } from "lucide-react";
 import { Toolbar } from "./components/Toolbar";
 import { TrackList } from "./components/TrackList";
 import { TimelineCanvas } from "./components/TimelineCanvas";
 import { TransportBar } from "./components/TransportBar";
 import { GuidedTour } from "./components/GuidedTour";
 import { Button } from "./components/ui/button";
+import { Toaster } from "./components/ui/toaster";
+import { toast } from "./hooks/use-toast";
 import { useProjectStore } from "./store/projectStore";
 import { useHistoryStore } from "./store/historyStore";
 import { decodeAudioFile } from "./audio/import";
@@ -26,7 +28,7 @@ const transport = new Transport(audioEngine);
 const getBufferUrl = (mediaId: string) => `/api/media/${mediaId}`;
 
 export default function App() {
-  const { tracks, addTrack, addMedia, addClip, loadState } = useProjectStore();
+  const { addTrack, addMedia, addClip, loadState } = useProjectStore();
   useEngineSync(audioEngine);
   const [currentTime, setCurrentTime] = useState(0);
   const [micRecorder, setMicRecorder] = useState<MicRecorder | null>(null);
@@ -34,9 +36,50 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [pxPerSecond, setPxPerSecond] = useState(100);
   const [tourOpen, setTourOpen] = useState(false);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const dragCounterRef = useRef(0);
   const { status: saveStatus, saveNow } = useAutosave(2000);
 
   useEffect(() => transport.onTimeUpdate(setCurrentTime), []);
+
+  useEffect(() => {
+    function hasFiles(e: DragEvent) {
+      return !!e.dataTransfer?.types.includes("Files");
+    }
+    function onDragEnter(e: DragEvent) {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      dragCounterRef.current += 1;
+      setIsDraggingFile(true);
+    }
+    function onDragOver(e: DragEvent) {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+    }
+    function onDragLeave(e: DragEvent) {
+      if (!hasFiles(e)) return;
+      dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+      if (dragCounterRef.current === 0) setIsDraggingFile(false);
+    }
+    function onDrop(e: DragEvent) {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      dragCounterRef.current = 0;
+      setIsDraggingFile(false);
+      const file = e.dataTransfer?.files[0];
+      if (file) handleImport(file);
+    }
+    window.addEventListener("dragenter", onDragEnter);
+    window.addEventListener("dragover", onDragOver);
+    window.addEventListener("dragleave", onDragLeave);
+    window.addEventListener("drop", onDrop);
+    return () => {
+      window.removeEventListener("dragenter", onDragEnter);
+      window.removeEventListener("dragover", onDragOver);
+      window.removeEventListener("dragleave", onDragLeave);
+      window.removeEventListener("drop", onDrop);
+    };
+  }, []);
 
   const zoomIn = () => setPxPerSecond((v) => Math.min(400, v * 1.25));
   const zoomOut = () => setPxPerSecond((v) => Math.max(20, v / 1.25));
@@ -57,9 +100,18 @@ export default function App() {
   }
 
   useEffect(() => {
-    fetchProject().then((state) => {
-      loadState({ tracks: state.tracks, clips: state.clips, media: state.media });
-    });
+    fetchProject()
+      .then((state) => {
+        loadState({ tracks: state.tracks, clips: state.clips, media: state.media });
+      })
+      .catch((err) => {
+        console.error("Failed to load project:", err);
+        toast({
+          variant: "destructive",
+          title: "Projet indisponible",
+          description: "Impossible de charger le projet depuis le serveur.",
+        });
+      });
   }, []);
 
   useKeyboardShortcuts({
@@ -81,15 +133,24 @@ export default function App() {
   });
 
   async function handleImport(file: File) {
-    const buffer = await decodeAudioFile(file, audioCtx);
-    const media = await uploadMedia(file, { duration: buffer.duration, sampleRate: buffer.sampleRate });
-    addMedia(media);
-    let trackId = tracks[0]?.id;
-    if (!trackId) {
-      trackId = randomUUID();
-      addTrack({ id: trackId, orderIndex: 0, name: "Piste 1", color: "", volume: 1, pan: 0, muted: false, soloed: false });
+    try {
+      const buffer = await decodeAudioFile(file, audioCtx);
+      const media = await uploadMedia(file, { duration: buffer.duration, sampleRate: buffer.sampleRate });
+      addMedia(media);
+      let trackId = useProjectStore.getState().tracks[0]?.id;
+      if (!trackId) {
+        trackId = randomUUID();
+        addTrack({ id: trackId, orderIndex: 0, name: "Piste 1", color: "", volume: 1, pan: 0, muted: false, soloed: false });
+      }
+      addClip({ id: randomUUID(), trackId, mediaId: media.id, startTime: 0, sourceOffset: 0, duration: media.duration, name: media.originalFilename });
+    } catch (err) {
+      console.error("Audio import failed:", err);
+      toast({
+        variant: "destructive",
+        title: "Échec de l'import",
+        description: err instanceof Error ? err.message : "Le fichier n'a pas pu être importé.",
+      });
     }
-    addClip({ id: randomUUID(), trackId, mediaId: media.id, startTime: 0, sourceOffset: 0, duration: media.duration, name: media.originalFilename });
   }
 
   async function handleToggleRecord() {
@@ -102,6 +163,11 @@ export default function App() {
         setIsRecording(true);
       } catch (err) {
         console.error("Microphone access denied or unavailable:", err);
+        toast({
+          variant: "destructive",
+          title: "Micro indisponible",
+          description: "Vérifie que le navigateur a l'autorisation d'accéder au micro.",
+        });
       }
     } else {
       const blob = await micRecorder!.stop();
@@ -128,6 +194,11 @@ export default function App() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Mixdown export failed:", err);
+      toast({
+        variant: "destructive",
+        title: "Échec de l'export",
+        description: err instanceof Error ? err.message : "Le mixdown n'a pas pu être généré.",
+      });
     }
   }
 
@@ -147,6 +218,15 @@ export default function App() {
         </Button>
       </header>
       <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} />
+      {isDraggingFile && (
+        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-studio-bg/60">
+          <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-primary bg-studio-panel/90 px-10 py-8">
+            <UploadCloud className="size-8 text-primary" />
+            <p className="text-sm font-medium">Déposer pour importer</p>
+          </div>
+        </div>
+      )}
+      <Toaster />
       <Toolbar
         onImport={handleImport}
         isRecording={isRecording}

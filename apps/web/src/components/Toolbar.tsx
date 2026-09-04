@@ -1,4 +1,4 @@
-import { useRef, useState, type DragEvent } from "react";
+import { useRef, useState } from "react";
 import { AlertTriangle, Check, Loader2, Mic, Square, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -24,18 +24,8 @@ export function Toolbar({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  function handleDrop(e: DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) onImport(file);
-  }
-
   return (
-    <div
-      onDrop={handleDrop}
-      onDragOver={(e) => e.preventDefault()}
-      className="flex items-center gap-3 border-b border-studio-border bg-studio-panel px-3 py-2"
-    >
+    <div className="flex items-center gap-3 border-b border-studio-border bg-studio-panel px-3 py-2">
       <div className="flex items-center gap-2" data-tour="import">
         <Button onClick={() => inputRef.current?.click()}>
           <Upload className="size-4" />
