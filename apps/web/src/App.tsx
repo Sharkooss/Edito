@@ -3,6 +3,7 @@ import { Info, UploadCloud } from "lucide-react";
 import { Toolbar } from "./components/Toolbar";
 import { Timeline } from "./components/Timeline";
 import { ClipInspector } from "./components/ClipInspector";
+import { Hint } from "./components/Hint";
 import { TransportBar } from "./components/TransportBar";
 import { GuidedTour } from "./components/GuidedTour";
 import { RecordCountdown } from "./components/RecordCountdown";
@@ -34,6 +35,11 @@ const processedAudio = new ProcessedAudio(mediaLibrary, (channels, length, sampl
   audioCtx.createBuffer(channels, length, sampleRate),
 );
 const transport = new Transport(audioEngine, mediaLibrary, processedAudio);
+
+/** Meter refresh rate. Fast enough to read, slow enough not to dominate rendering. */
+const METER_HZ = 20;
+/** Below this, a level change is invisible and not worth a re-render. */
+const METER_EPSILON = 0.005;
 
 export default function App() {
   const { addMedia, addClip, loadState } = useProjectStore();
@@ -86,17 +92,38 @@ export default function App() {
 
   // ---- Metering ------------------------------------------------------------
   // One loop for the whole app rather than one per track header.
+  //
+  // Every setLevels re-renders the entire tree, so this deliberately does two
+  // things: it samples at METER_HZ rather than per frame, and it skips the
+  // state update when nothing has moved. An idle project therefore causes zero
+  // re-renders — without that, a silent editor still burned a full render pass
+  // 60 times a second and the UI became unresponsive.
   useEffect(() => {
     let raf = 0;
-    const tick = () => {
+    let lastSample = 0;
+    let previous: Record<string, number> = {};
+
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      if (now - lastSample < 1000 / METER_HZ) return;
+      lastSample = now;
+
       const { tracks } = useProjectStore.getState();
       const next: Record<string, number> = {};
       for (const t of tracks) next[t.id] = audioEngine.trackLevel(t.id);
       const armed = armedTrackId(recordingRef.current);
       if (armed && recorderRef.current) next[armed] = recorderRef.current.level();
+
+      const keys = Object.keys(next);
+      const unchanged =
+        keys.length === Object.keys(previous).length &&
+        keys.every((k) => Math.abs((previous[k] ?? 0) - next[k]) < METER_EPSILON);
+      if (unchanged) return;
+
+      previous = next;
       setLevels(next);
-      raf = requestAnimationFrame(tick);
     };
+
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, []);
@@ -366,6 +393,10 @@ export default function App() {
     }
   }
 
+  // Stable identity: Timeline keys its pointer listeners on this, so a fresh
+  // arrow on every render would tear them down and re-add them constantly.
+  const seek = useCallback((t: number) => transport.seek(t), []);
+
   // ---- Selection-scoped actions -------------------------------------------
   const targetClipIds = useCallback((): string[] => {
     const { clips, selectedClipIds } = useProjectStore.getState();
@@ -402,15 +433,16 @@ export default function App() {
             REC {elapsed.toFixed(1)}s
           </span>
         )}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="ml-auto size-6"
-          title="Visite guidée de l'interface"
-          onClick={() => setTourOpen(true)}
-        >
-          <Info className="size-4" />
-        </Button>
+        <Hint label="Visite guidée de l'interface, étape par étape." side="left">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="ml-auto size-6"
+            onClick={() => setTourOpen(true)}
+          >
+            <Info className="size-4" />
+          </Button>
+        </Hint>
       </header>
 
       <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} />
@@ -461,7 +493,7 @@ export default function App() {
           processed={processedAudio}
           levels={levels}
           armedTrackId={armedId}
-          onSeek={(t) => transport.seek(t)}
+          onSeek={seek}
           onToggleArm={(trackId) => void handleToggleArm(trackId)}
         />
         <ClipInspector library={mediaLibrary} processed={processedAudio} />

@@ -18,7 +18,11 @@ const WINDOW = hann(FRAME);
  * Position near `ideal` whose samples best continue `target`, by normalised
  * cross-correlation.
  */
-function bestOffset(input: Float32Array, ideal: number, target: Float32Array): number {
+function bestOffset(
+  input: Float32Array,
+  ideal: number,
+  target: Float32Array<ArrayBufferLike>,
+): number {
   const overlap = target.length;
   let bestPos = Math.max(0, ideal);
   let bestScore = -Infinity;
@@ -76,13 +80,15 @@ export function timeStretch(input: Float32Array, ratio: number): Float32Array {
   const analysisHop = SYNTHESIS_HOP / ratio;
   const overlap = FRAME - SYNTHESIS_HOP;
 
-  let target: Float32Array | null = null;
+  // Annotated rather than inferred: `target` is assigned from a subarray whose
+  // position depends on `pos`, and TypeScript reads that round trip as circular.
+  let target: Float32Array<ArrayBufferLike> | null = null;
   let frame = 0;
 
   for (let synth = 0; synth < outLength; synth += SYNTHESIS_HOP, frame++) {
     const ideal = Math.min(input.length - FRAME, Math.round(frame * analysisHop));
     if (ideal < 0) break;
-    const pos = target ? bestOffset(input, ideal, target) : Math.max(0, ideal);
+    const pos: number = target ? bestOffset(input, ideal, target) : Math.max(0, ideal);
 
     for (let i = 0; i < FRAME; i++) {
       const src = pos + i;
@@ -94,7 +100,7 @@ export function timeStretch(input: Float32Array, ratio: number): Float32Array {
 
     // What the input would naturally play next; the following frame is chosen
     // to match it as closely as possible.
-    const tailStart = pos + SYNTHESIS_HOP;
+    const tailStart: number = pos + SYNTHESIS_HOP;
     target =
       tailStart + overlap <= input.length ? input.subarray(tailStart, tailStart + overlap) : null;
   }
