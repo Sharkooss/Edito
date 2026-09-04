@@ -17,6 +17,7 @@ interface ProjectStoreState {
   addMedia: (media: MediaDTO) => void;
   selectClip: (id: string | null) => void;
   reorderTrack: (id: string, direction: "up" | "down") => void;
+  updateTrack: (id: string, patch: Partial<Track>) => void;
 }
 
 export const useProjectStore = create<ProjectStoreState>((set) => ({
@@ -50,4 +51,5 @@ export const useProjectStore = create<ProjectStoreState>((set) => ({
         }),
       };
     }),
+  updateTrack: (id, patch) => set((s) => ({ tracks: s.tracks.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
 }));

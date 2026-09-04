@@ -31,4 +31,12 @@ describe("projectStore", () => {
     expect(a.id).toBe("t2");
     expect(b.id).toBe("t1");
   });
+
+  it("updateTrack patches only the matching track", () => {
+    useProjectStore.setState({
+      tracks: [{ id: "t1", orderIndex: 0, name: "T", color: "", volume: 1, pan: 0, muted: false, soloed: false }],
+    } as any);
+    useProjectStore.getState().updateTrack("t1", { volume: 0.3 });
+    expect(useProjectStore.getState().tracks[0].volume).toBe(0.3);
+  });
 });
