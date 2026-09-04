@@ -1,5 +1,6 @@
 import { Toolbar } from "./components/Toolbar";
 import { TrackList } from "./components/TrackList";
+import { TimelineCanvas } from "./components/TimelineCanvas";
 import { useProjectStore } from "./store/projectStore";
 import { decodeAudioFile } from "./audio/import";
 import { uploadMedia } from "./api/client";
@@ -27,6 +28,7 @@ export default function App() {
       <Toolbar onImport={handleImport} />
       <div className="flex flex-1">
         <TrackList />
+        <TimelineCanvas pxPerSecond={100} />
       </div>
     </div>
   );
