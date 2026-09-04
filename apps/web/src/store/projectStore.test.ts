@@ -18,4 +18,17 @@ describe("projectStore", () => {
     useProjectStore.getState().updateClip("c1", { startTime: 5 });
     expect(useProjectStore.getState().clips[0].startTime).toBe(5);
   });
+
+  it("reorderTrack swaps orderIndex with the adjacent track", () => {
+    useProjectStore.setState({
+      tracks: [
+        { id: "t1", orderIndex: 0, name: "A", color: "", volume: 1, pan: 0, muted: false, soloed: false },
+        { id: "t2", orderIndex: 1, name: "B", color: "", volume: 1, pan: 0, muted: false, soloed: false },
+      ],
+    } as any);
+    useProjectStore.getState().reorderTrack("t1", "down");
+    const [a, b] = useProjectStore.getState().tracks.sort((x, y) => x.orderIndex - y.orderIndex);
+    expect(a.id).toBe("t2");
+    expect(b.id).toBe("t1");
+  });
 });

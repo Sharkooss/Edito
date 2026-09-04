@@ -22,9 +22,11 @@ export function TrackList() {
 
   return (
     <div className="flex flex-col">
-      {tracks.map((t, i) => (
-        <TrackHeader key={t.id} track={t} index={i} />
-      ))}
+      {[...tracks]
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((t, i) => (
+          <TrackHeader key={t.id} track={t} index={i} />
+        ))}
       <Button variant="secondary" className="m-2" onClick={handleAdd}>
         + Ajouter une piste
       </Button>
