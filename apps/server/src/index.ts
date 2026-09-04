@@ -1,12 +1,15 @@
 import Fastify from "fastify";
 import multipart from "@fastify/multipart";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { registerProjectRoutes } from "./routes/project.js";
 import { registerMediaRoutes } from "./routes/media.js";
 import { registerStatic } from "./static.js";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const app = Fastify({ logger: true });
-const dataDir = process.env.DATA_DIR ?? join(process.cwd(), "data");
+const dataDir = process.env.DATA_DIR ?? join(__dirname, "../../../data");
 
 app.get("/healthz", async () => ({ status: "ok" }));
 app.register(multipart);
