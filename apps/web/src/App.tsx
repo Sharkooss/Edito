@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Info, UploadCloud } from "lucide-react";
 import { Toolbar } from "./components/Toolbar";
 import { Timeline } from "./components/Timeline";
+import { ClipInspector } from "./components/ClipInspector";
 import { TransportBar } from "./components/TransportBar";
 import { GuidedTour } from "./components/GuidedTour";
 import { RecordCountdown } from "./components/RecordCountdown";
@@ -147,6 +148,7 @@ export default function App() {
           gain: 1,
           fadeIn: 0,
           fadeOut: 0,
+          effects: "{}",
         });
         await mediaLibrary.load(media.id);
       } catch (err) {
@@ -316,6 +318,7 @@ export default function App() {
         gain: 1,
         fadeIn: 0,
         fadeOut: 0,
+        effects: "{}",
       });
       await mediaLibrary.load(media.id);
     } catch (err) {
@@ -450,15 +453,19 @@ export default function App() {
         onStop={stopPlayback}
       />
 
-      <Timeline
-        pxPerSecond={pxPerSecond}
-        currentTime={currentTime}
-        library={mediaLibrary}
-        levels={levels}
-        armedTrackId={armedId}
-        onSeek={(t) => transport.seek(t)}
-        onToggleArm={(trackId) => void handleToggleArm(trackId)}
-      />
+      <div className="flex min-h-0 flex-1">
+        <Timeline
+          pxPerSecond={pxPerSecond}
+          currentTime={currentTime}
+          library={mediaLibrary}
+          processed={processedAudio}
+          levels={levels}
+          armedTrackId={armedId}
+          onSeek={(t) => transport.seek(t)}
+          onToggleArm={(trackId) => void handleToggleArm(trackId)}
+        />
+        <ClipInspector library={mediaLibrary} processed={processedAudio} />
+      </div>
     </div>
   );
 }

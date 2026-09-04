@@ -13,6 +13,7 @@ const clip = (id: string, startTime: number, duration: number): Clip => ({
   gain: 1,
   fadeIn: 0,
   fadeOut: 0,
+  effects: "{}",
 });
 
 describe("gridInterval", () => {

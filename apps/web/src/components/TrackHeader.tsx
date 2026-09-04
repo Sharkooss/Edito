@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp, Circle, Headphones, Volume2, VolumeX, X } from "lucide-react";
 import { useProjectStore, type Track } from "../store/projectStore";
 import { Button } from "./ui/button";
+import { Hint } from "./Hint";
 import { Slider } from "./ui/slider";
 import { LevelMeter } from "./LevelMeter";
 import { cn } from "../lib/utils";
@@ -50,33 +51,36 @@ export function TrackHeader({
       <div className="flex min-w-0 flex-1 flex-col gap-1 py-1.5 pl-3 pr-1.5">
         <div className="flex items-center gap-1">
           <span className="min-w-0 flex-1 truncate text-xs font-medium">{track.name}</span>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-5"
-            title="Monter la piste"
-            onClick={() => reorderTrack(track.id, "up")}
-          >
-            <ChevronUp className="size-3" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-5"
-            title="Descendre la piste"
-            onClick={() => reorderTrack(track.id, "down")}
-          >
-            <ChevronDown className="size-3" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-5 hover:bg-destructive hover:text-destructive-foreground"
-            title="Supprimer la piste"
-            onClick={() => removeTrack(track.id)}
-          >
-            <X className="size-3" />
-          </Button>
+          <Hint label="Remonte la piste d'un rang.">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-5"
+              onClick={() => reorderTrack(track.id, "up")}
+            >
+              <ChevronUp className="size-3" />
+            </Button>
+          </Hint>
+          <Hint label="Descend la piste d'un rang.">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-5"
+              onClick={() => reorderTrack(track.id, "down")}
+            >
+              <ChevronDown className="size-3" />
+            </Button>
+          </Hint>
+          <Hint label="Supprime la piste et tous ses clips.">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-5 hover:bg-destructive hover:text-destructive-foreground"
+              onClick={() => removeTrack(track.id)}
+            >
+              <X className="size-3" />
+            </Button>
+          </Hint>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -110,49 +114,60 @@ export function TrackHeader({
         </div>
 
         <div className="grid grid-cols-3 gap-1">
-          <button
-            type="button"
-            aria-pressed={track.muted}
-            onClick={() => updateTrack(track.id, { muted: !track.muted })}
-            className={cn(
-              "flex h-6 items-center justify-center gap-1 rounded border text-[10px] font-semibold transition-colors",
-              track.muted
-                ? "border-console-mute bg-console-mute text-console-mute-foreground"
-                : "border-studio-border bg-console-inset text-muted-foreground hover:bg-studio-border/60",
-            )}
-          >
-            <VolumeX className="size-3" />
-            Muet
-          </button>
-          <button
-            type="button"
-            aria-pressed={track.soloed}
-            onClick={() => updateTrack(track.id, { soloed: !track.soloed })}
-            className={cn(
-              "flex h-6 items-center justify-center gap-1 rounded border text-[10px] font-semibold transition-colors",
-              track.soloed
-                ? "border-primary bg-primary text-primary-foreground shadow-[0_0_8px_rgba(249,115,22,0.55)]"
-                : "border-studio-border bg-console-inset text-muted-foreground hover:bg-studio-border/60",
-            )}
-          >
-            <Headphones className="size-3" />
-            Solo
-          </button>
-          <button
-            type="button"
-            aria-pressed={armed}
-            onClick={onToggleArm}
-            title={armed ? "Désarmer la piste" : "Armer la piste pour enregistrer"}
-            className={cn(
-              "flex h-6 items-center justify-center gap-1 rounded border text-[10px] font-semibold transition-colors",
+          <Hint label="Coupe le son de cette piste.">
+            <button
+              type="button"
+              aria-pressed={track.muted}
+              onClick={() => updateTrack(track.id, { muted: !track.muted })}
+              className={cn(
+                "flex h-6 items-center justify-center gap-1 rounded border text-[10px] font-semibold transition-colors",
+                track.muted
+                  ? "border-console-mute bg-console-mute text-console-mute-foreground"
+                  : "border-studio-border bg-console-inset text-muted-foreground hover:bg-studio-border/60",
+              )}
+            >
+              <VolumeX className="size-3" />
+              Muet
+            </button>
+          </Hint>
+          <Hint label="N'écoute que les pistes en solo.">
+            <button
+              type="button"
+              aria-pressed={track.soloed}
+              onClick={() => updateTrack(track.id, { soloed: !track.soloed })}
+              className={cn(
+                "flex h-6 items-center justify-center gap-1 rounded border text-[10px] font-semibold transition-colors",
+                track.soloed
+                  ? "border-primary bg-primary text-primary-foreground shadow-[0_0_8px_rgba(249,115,22,0.55)]"
+                  : "border-studio-border bg-console-inset text-muted-foreground hover:bg-studio-border/60",
+              )}
+            >
+              <Headphones className="size-3" />
+              Solo
+            </button>
+          </Hint>
+          <Hint
+            label={
               armed
-                ? "border-destructive bg-destructive text-destructive-foreground shadow-[0_0_8px_rgba(239,68,68,0.55)]"
-                : "border-studio-border bg-console-inset text-muted-foreground hover:bg-studio-border/60",
-            )}
+                ? "Désarme la piste."
+                : "Arme la piste pour l'enregistrement. Son vumètre devient actif : vous pouvez vérifier votre micro avant de lancer."
+            }
           >
-            <Circle className={cn("size-2.5", armed && "fill-current")} />
-            Rec
-          </button>
+            <button
+              type="button"
+              aria-pressed={armed}
+              onClick={onToggleArm}
+              className={cn(
+                "flex h-6 items-center justify-center gap-1 rounded border text-[10px] font-semibold transition-colors",
+                armed
+                  ? "border-destructive bg-destructive text-destructive-foreground shadow-[0_0_8px_rgba(239,68,68,0.55)]"
+                  : "border-studio-border bg-console-inset text-muted-foreground hover:bg-studio-border/60",
+              )}
+            >
+              <Circle className={cn("size-2.5", armed && "fill-current")} />
+              Rec
+            </button>
+          </Hint>
         </div>
       </div>
 

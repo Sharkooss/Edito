@@ -3,6 +3,7 @@ import { Pause, Play, Square } from "lucide-react";
 import type { Transport } from "../audio/transport";
 import { formatTime } from "../lib/time";
 import { Button } from "./ui/button";
+import { Hint } from "./Hint";
 
 export function TransportBar({
   transport,
@@ -22,18 +23,21 @@ export function TransportBar({
   return (
     <div className="flex items-center gap-3 border-b border-studio-border bg-studio-panel px-3 py-2">
       <div className="flex gap-1" data-tour="transport">
-        <Button
-          size="icon"
-          onClick={onTogglePlayPause}
-          aria-pressed={isPlaying}
-          title={isPlaying ? "Pause" : "Lecture"}
-          className={isPlaying ? "shadow-[0_0_10px_rgba(249,115,22,0.55)]" : ""}
-        >
-          {isPlaying ? <Pause className="size-4 fill-current" /> : <Play className="size-4 fill-current" />}
-        </Button>
-        <Button size="icon" variant="secondary" onClick={onStop} title="Stop">
-          <Square className="size-4 fill-current" />
-        </Button>
+        <Hint label={isPlaying ? "Met la lecture en pause (Espace)." : "Lance la lecture (Espace)."}>
+          <Button
+            size="icon"
+            onClick={onTogglePlayPause}
+            aria-pressed={isPlaying}
+            className={isPlaying ? "shadow-[0_0_10px_rgba(249,115,22,0.55)]" : ""}
+          >
+            {isPlaying ? <Pause className="size-4 fill-current" /> : <Play className="size-4 fill-current" />}
+          </Button>
+        </Hint>
+        <Hint label="Arrête la lecture et revient au début.">
+          <Button size="icon" variant="secondary" onClick={onStop}>
+            <Square className="size-4 fill-current" />
+          </Button>
+        </Hint>
       </div>
 
       <div className="rounded-md border border-studio-border bg-console-inset px-3 py-1">
