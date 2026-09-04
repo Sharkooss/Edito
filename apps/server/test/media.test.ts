@@ -56,7 +56,7 @@ describe("media routes", () => {
     expect(after.length).toBe(before.length);
   });
 
-  it("honors a Range header with a 206 partial response", async () => {
+  it("honors a Range header with a 206 partial response and correct Content-Type", async () => {
     const app = buildApp();
     const form = new FormData();
     form.append("file", new Blob(["abcdefgh"], { type: "audio/wav" }), "small.wav");
@@ -72,6 +72,43 @@ describe("media routes", () => {
 
     expect(res.statusCode).toBe(206);
     expect(res.headers["content-range"]).toBeDefined();
+    expect(res.headers["content-type"]).toBe("audio/wav");
     expect(res.rawPayload.length).toBe(4);
+  });
+
+  it("returns the correct Content-Type on the plain (non-Range) GET path", async () => {
+    const app = buildApp();
+    const form = new FormData();
+    form.append("file", new Blob(["abcdefgh"], { type: "audio/wav" }), "small.wav");
+    const uploadRes = await app.inject({ method: "POST", url: "/api/media", payload: form as any });
+    expect(uploadRes.statusCode).toBe(201);
+    const { id } = uploadRes.json();
+
+    const res = await app.inject({ method: "GET", url: `/api/media/${id}` });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toBe("audio/wav");
+  });
+
+  it("accepts an audio/webm upload (microphone recordings) with 201, not 415", async () => {
+    const app = buildApp();
+    const form = new FormData();
+    form.append("file", new Blob(["fake webm bytes"], { type: "audio/webm" }), "Enregistrement.webm");
+    const res = await app.inject({ method: "POST", url: "/api/media", payload: form as any });
+    expect(res.statusCode).toBe(201);
+  });
+
+  it("returns audio/webm Content-Type when fetching a stored .webm recording", async () => {
+    const app = buildApp();
+    const form = new FormData();
+    form.append("file", new Blob(["fake webm bytes"], { type: "audio/webm" }), "Enregistrement.webm");
+    const uploadRes = await app.inject({ method: "POST", url: "/api/media", payload: form as any });
+    expect(uploadRes.statusCode).toBe(201);
+    const { id } = uploadRes.json();
+
+    const res = await app.inject({ method: "GET", url: `/api/media/${id}` });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toBe("audio/webm");
   });
 });

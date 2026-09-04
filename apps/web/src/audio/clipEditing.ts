@@ -39,3 +39,20 @@ export function deleteClipWithHistory(clip: Clip): void {
     undo: () => store.addClip(clip),
   });
 }
+
+// Comparaison finale-vs-originale utilisée par les drags de déplacement/trim de
+// ClipWaveform : on ne pousse une commande d'historique que si la position/forme
+// du clip a réellement changé entre le mousedown et le mouseup. Un aller-retour
+// (valeur modifiée puis ramenée à l'identique avant le relâchement) ne compare que
+// l'état final à l'état initial, donc il est traité comme "pas de changement" —
+// c'est le comportement voulu, pas une lacune du garde-fou.
+export function hasClipChanged(
+  original: { startTime: number; sourceOffset: number; duration: number },
+  current: { startTime: number; sourceOffset: number; duration: number }
+): boolean {
+  return (
+    current.startTime !== original.startTime ||
+    current.sourceOffset !== original.sourceOffset ||
+    current.duration !== original.duration
+  );
+}

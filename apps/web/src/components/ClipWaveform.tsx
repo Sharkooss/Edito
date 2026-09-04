@@ -3,7 +3,7 @@ import WaveSurfer from "wavesurfer.js";
 import { useProjectStore, type Clip } from "../store/projectStore";
 import { useHistoryStore } from "../store/historyStore";
 import { secondsToPixels, pixelsToSeconds } from "../lib/time";
-import { deleteClipWithHistory } from "../audio/clipEditing";
+import { deleteClipWithHistory, hasClipChanged } from "../audio/clipEditing";
 
 function useEdgeDrag(
   clip: Clip,
@@ -36,11 +36,7 @@ function useEdgeDrag(
     }
     function onUp() {
       const current = useProjectStore.getState().clips.find((c) => c.id === clip.id)!;
-      const unchanged =
-        current.startTime === original.startTime &&
-        current.sourceOffset === original.sourceOffset &&
-        current.duration === original.duration;
-      if (unchanged) {
+      if (!hasClipChanged(original, current)) {
         setActive(false);
         return;
       }
@@ -99,9 +95,12 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
       updateClip(clip.id, { startTime: Math.max(0, dragOriginal!.startTime + deltaSeconds) });
     }
     function onUp() {
-      const finalStartTime = useProjectStore.getState().clips.find((c) => c.id === clip.id)!.startTime;
+      const finalClip = useProjectStore.getState().clips.find((c) => c.id === clip.id)!;
       const original = dragOriginal!;
-      if (finalStartTime === original.startTime) {
+      const originalSnapshot = { startTime: original.startTime, sourceOffset: clip.sourceOffset, duration: clip.duration };
+      const currentSnapshot = { startTime: finalClip.startTime, sourceOffset: finalClip.sourceOffset, duration: finalClip.duration };
+      const finalStartTime = finalClip.startTime;
+      if (!hasClipChanged(originalSnapshot, currentSnapshot)) {
         setDragStartX(null);
         setDragOriginal(null);
         return;

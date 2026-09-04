@@ -5,7 +5,7 @@ import { join, extname } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { getDb } from "../db.js";
 
-const ALLOWED_MIME = new Set(["audio/wav", "audio/wave", "audio/x-wav", "audio/mpeg", "audio/ogg", "audio/mp4", "audio/m4a"]);
+const ALLOWED_MIME = new Set(["audio/wav", "audio/wave", "audio/x-wav", "audio/mpeg", "audio/ogg", "audio/mp4", "audio/m4a", "audio/webm"]);
 const MAX_BYTES = 100 * 1024 * 1024;
 
 // Le type MIME d'origine n'est pas persisté en base ; on le redérive de l'extension
@@ -19,6 +19,7 @@ const MIME_BY_EXT: Record<string, string> = {
   ".ogg": "audio/ogg",
   ".mp4": "audio/mp4",
   ".m4a": "audio/m4a",
+  ".webm": "audio/webm",
 };
 
 function mimeForFile(filename: string): string {
