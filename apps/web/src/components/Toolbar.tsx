@@ -1,20 +1,23 @@
-import { useRef, type DragEvent } from "react";
+import { useRef, useState, type DragEvent } from "react";
 import { Button } from "./ui/button";
 
 export function Toolbar({
   onImport,
   isRecording,
   onToggleRecord,
+  onExport,
   saveStatus,
   onRetrySave,
 }: {
   onImport: (file: File) => void;
   isRecording: boolean;
   onToggleRecord: () => void;
+  onExport: () => Promise<void>;
   saveStatus?: "idle" | "saving" | "saved" | "error";
   onRetrySave?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   function handleDrop(e: DragEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -43,6 +46,20 @@ export function Toolbar({
       <span className="text-xs text-neutral-400">ou glisser-déposer un fichier ici</span>
       <Button variant={isRecording ? "destructive" : "outline"} onClick={onToggleRecord}>
         {isRecording ? "■ Arrêter l'enregistrement" : "● Enregistrer"}
+      </Button>
+      <Button
+        variant="secondary"
+        disabled={isExporting}
+        onClick={async () => {
+          setIsExporting(true);
+          try {
+            await onExport();
+          } finally {
+            setIsExporting(false);
+          }
+        }}
+      >
+        {isExporting ? "Export en cours..." : "Exporter le mixdown"}
       </Button>
       {saveStatus && (
         <div className="ml-auto flex items-center gap-2">

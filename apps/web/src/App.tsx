@@ -12,6 +12,7 @@ import { uploadMedia, fetchProject } from "./api/client";
 import { randomUUID } from "./lib/uuid";
 import { MicRecorder, requestMicStream } from "./audio/record";
 import { useAutosave } from "./lib/useAutosave";
+import { renderMixdown, audioBufferToWav } from "./audio/export";
 
 const audioCtx = new AudioContext();
 const audioEngine = new AudioEngine(audioCtx);
@@ -65,12 +66,29 @@ export default function App() {
     }
   }
 
+  async function handleExport() {
+    const buffer = await renderMixdown(
+      useProjectStore.getState().clips,
+      useProjectStore.getState().tracks,
+      (mediaId) => `/api/media/${mediaId}`,
+      44100
+    );
+    const blob = audioBufferToWav(buffer);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "edito-mixdown.wav";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-studio-bg text-neutral-100">
       <Toolbar
         onImport={handleImport}
         isRecording={isRecording}
         onToggleRecord={handleToggleRecord}
+        onExport={handleExport}
         saveStatus={saveStatus}
         onRetrySave={saveNow}
       />
