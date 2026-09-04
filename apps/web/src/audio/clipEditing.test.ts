@@ -7,7 +7,12 @@ import {
   moveClips,
   trimClip,
   setClipFade,
+  setClipEffects,
+  setClipSpeed,
+  resetClipEffects,
+  normalizeClips,
 } from "./clipEditing";
+import { normalizeEffects } from "./effects";
 import { useProjectStore } from "../store/projectStore";
 import { useHistoryStore } from "../store/historyStore";
 import type { Clip } from "../api/client";
@@ -23,6 +28,7 @@ const clip = (over: Partial<Clip> = {}): Clip => ({
   gain: 1,
   fadeIn: 0,
   fadeOut: 0,
+  effects: "{}",
   ...over,
 });
 
@@ -209,5 +215,103 @@ describe("setClipFade", () => {
     useProjectStore.setState({ clips: [clip({ duration: 4 })] });
     setClipFade("c1", "out", -3);
     expect(useProjectStore.getState().clips[0].fadeOut).toBe(0);
+  });
+});
+
+const effectsOf = (id: string) =>
+  normalizeEffects(useProjectStore.getState().clips.find((c) => c.id === id)!.effects);
+
+describe("setClipEffects", () => {
+  it("merges a patch into existing effects", () => {
+    useProjectStore.setState({ clips: [clip({ effects: '{"pitch":5}' })] });
+    setClipEffects(["c1"], { reverb: { mix: 0.3, size: 2 } });
+    expect(effectsOf("c1").pitch).toBe(5);
+    expect(effectsOf("c1").reverb.mix).toBeCloseTo(0.3);
+  });
+
+  it("applies to every listed clip in one undo step", () => {
+    useProjectStore.setState({ clips: [clip({ id: "a" }), clip({ id: "b", startTime: 20 })] });
+    setClipEffects(["a", "b"], { pitch: -4 });
+    expect(effectsOf("a").pitch).toBe(-4);
+    expect(effectsOf("b").pitch).toBe(-4);
+    useHistoryStore.getState().undo();
+    expect(effectsOf("a").pitch).toBe(0);
+    expect(effectsOf("b").pitch).toBe(0);
+  });
+
+  it("clamps an out-of-range patch", () => {
+    useProjectStore.setState({ clips: [clip()] });
+    setClipEffects(["c1"], { pitch: 999 });
+    expect(effectsOf("c1").pitch).toBe(24);
+  });
+});
+
+describe("setClipSpeed", () => {
+  it("keeps the source window by rescaling the timeline duration", () => {
+    useProjectStore.setState({ clips: [clip({ duration: 4 })] });
+    setClipSpeed(["c1"], 2);
+    expect(useProjectStore.getState().clips[0].duration).toBeCloseTo(2);
+    expect(effectsOf("c1").speed).toBe(2);
+  });
+
+  it("lengthens the clip when slowing down", () => {
+    useProjectStore.setState({ clips: [clip({ duration: 4 })] });
+    setClipSpeed(["c1"], 0.5);
+    expect(useProjectStore.getState().clips[0].duration).toBeCloseTo(8);
+  });
+
+  it("re-places a slowed clip that would now overlap its neighbour", () => {
+    useProjectStore.setState({
+      clips: [
+        clip({ id: "a", startTime: 0, duration: 4 }),
+        clip({ id: "b", startTime: 5, duration: 2 }),
+      ],
+    });
+    setClipSpeed(["a"], 0.5); // a becomes 8 s and would run into b
+    const clips = useProjectStore.getState().clips;
+    const a = clips.find((c) => c.id === "a")!;
+    const b = clips.find((c) => c.id === "b")!;
+    const overlap =
+      a.startTime < b.startTime + b.duration && b.startTime < a.startTime + a.duration;
+    expect(overlap).toBe(false);
+  });
+
+  it("undoes duration, effects and position together", () => {
+    useProjectStore.setState({ clips: [clip({ duration: 4 })] });
+    setClipSpeed(["c1"], 0.5);
+    useHistoryStore.getState().undo();
+    expect(useProjectStore.getState().clips[0].duration).toBeCloseTo(4);
+    expect(effectsOf("c1").speed).toBe(1);
+  });
+
+  it("ignores a non-positive speed", () => {
+    useProjectStore.setState({ clips: [clip({ duration: 4 })] });
+    setClipSpeed(["c1"], 0);
+    expect(useProjectStore.getState().clips[0].duration).toBeCloseTo(4);
+  });
+});
+
+describe("resetClipEffects", () => {
+  it("returns the clip to neutral and restores its unscaled duration", () => {
+    useProjectStore.setState({ clips: [clip({ duration: 4 })] });
+    setClipSpeed(["c1"], 0.5);
+    expect(useProjectStore.getState().clips[0].duration).toBeCloseTo(8);
+    resetClipEffects(["c1"]);
+    expect(effectsOf("c1").speed).toBe(1);
+    expect(useProjectStore.getState().clips[0].duration).toBeCloseTo(4);
+  });
+});
+
+describe("normalizeClips", () => {
+  it("sets the gain that lifts the measured peak to full scale", () => {
+    useProjectStore.setState({ clips: [clip()] });
+    normalizeClips(["c1"], () => 0.5);
+    expect(useProjectStore.getState().clips[0].gain).toBeCloseTo(2);
+  });
+
+  it("leaves a silent clip untouched", () => {
+    useProjectStore.setState({ clips: [clip({ gain: 0.8 })] });
+    normalizeClips(["c1"], () => null);
+    expect(useProjectStore.getState().clips[0].gain).toBeCloseTo(0.8);
   });
 });

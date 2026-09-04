@@ -26,6 +26,8 @@ export interface Clip {
   gain: number;
   fadeIn: number;
   fadeOut: number;
+  /** JSON blob of per-clip effect settings; interpreted client-side. */
+  effects: string;
 }
 
 export interface Media {

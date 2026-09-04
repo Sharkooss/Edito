@@ -1,6 +1,7 @@
 import { useLayoutEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
+import { Hint } from "./Hint";
 
 interface TourStep {
   target: string;
@@ -134,9 +135,11 @@ export function GuidedTour({ open, onClose }: { open: boolean; onClose: () => vo
       >
         <div className="mb-2 flex items-start justify-between gap-2">
           <h2 className="text-sm font-semibold">{step.title}</h2>
-          <Button size="icon" variant="ghost" className="-mr-1 -mt-1 size-6" onClick={onClose} title="Fermer la visite">
-            <X className="size-3.5" />
-          </Button>
+          <Hint label="Ferme la visite guidée.">
+            <Button size="icon" variant="ghost" className="-mr-1 -mt-1 size-6" onClick={onClose}>
+              <X className="size-3.5" />
+            </Button>
+          </Hint>
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">{step.body}</p>
         <div className="mt-4 flex items-center justify-between">

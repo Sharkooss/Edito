@@ -14,6 +14,7 @@ const CLIP_COLUMNS_ADDED_AFTER_V1: ReadonlyArray<readonly [string, string]> = [
   ["gain", "REAL NOT NULL DEFAULT 1"],
   ["fade_in", "REAL NOT NULL DEFAULT 0"],
   ["fade_out", "REAL NOT NULL DEFAULT 0"],
+  ["effects", "TEXT NOT NULL DEFAULT '{}'"],
 ];
 
 function migrate(instance: Database.Database): void {

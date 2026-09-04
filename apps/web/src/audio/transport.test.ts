@@ -13,6 +13,7 @@ const clip = (over: Partial<Clip> = {}): Clip => ({
   gain: 1,
   fadeIn: 0,
   fadeOut: 0,
+  effects: "{}",
   ...over,
 });
 const track: Track = {
@@ -29,17 +30,33 @@ const track: Track = {
 function harness() {
   let now = 0;
   const started: Array<{ when: number; offset: number; duration: number }> = [];
+  const param = () => ({ value: 1, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() });
   const ctx = {
     get currentTime() {
       return now;
     },
-    createGain: () => ({
-      gain: { value: 1, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
+    sampleRate: 44100,
+    createBuffer: (channels: number, length: number, sampleRate: number) =>
+      ({
+        numberOfChannels: channels,
+        length,
+        sampleRate,
+        duration: length / sampleRate,
+        getChannelData: () => new Float32Array(length),
+      }) as unknown as AudioBuffer,
+    createGain: () => ({ gain: param(), connect: vi.fn(), disconnect: vi.fn() }),
+    createBiquadFilter: () => ({
+      type: "",
+      frequency: param(),
+      gain: param(),
+      Q: param(),
       connect: vi.fn(),
       disconnect: vi.fn(),
     }),
+    createConvolver: () => ({ buffer: null, connect: vi.fn(), disconnect: vi.fn() }),
     createBufferSource: () => ({
       buffer: null as AudioBuffer | null,
+      playbackRate: param(),
       connect: vi.fn(),
       start: (when: number, offset: number, duration: number) =>
         started.push({ when, offset, duration }),
@@ -58,12 +75,17 @@ function harness() {
     get: (id: string) => (id === "m1" ? buffer : null),
     has: (id: string) => id === "m1",
   };
+  const processed = {
+    preload: vi.fn().mockResolvedValue(undefined),
+    get: (clip: Clip) =>
+      clip.mediaId === "m1" ? { buffer, baseOffset: clip.sourceOffset, rate: 1 } : null,
+  };
   return {
     started,
     advance: (dt: number) => {
       now += dt;
     },
-    transport: new Transport(engine as never, library as never),
+    transport: new Transport(engine as never, library as never, processed as never),
     engine,
   };
 }

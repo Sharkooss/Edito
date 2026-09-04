@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useProjectStore, type Clip } from "../store/projectStore";
 import type { MediaLibrary } from "../audio/mediaLibrary";
+import type { ProcessedAudio } from "../audio/processedAudio";
 import { ClipView, type ClipPart } from "./ClipView";
 import { TrackHeader } from "./TrackHeader";
 import { TimeRuler, RULER_HEIGHT } from "./TimeRuler";
@@ -39,6 +40,7 @@ export function Timeline({
   pxPerSecond,
   currentTime,
   library,
+  processed,
   levels,
   armedTrackId,
   onSeek,
@@ -47,6 +49,7 @@ export function Timeline({
   pxPerSecond: number;
   currentTime: number;
   library: MediaLibrary;
+  processed: ProcessedAudio;
   levels: Record<string, number>;
   armedTrackId: string | null;
   onSeek: (t: number) => void;
@@ -300,6 +303,7 @@ export function Timeline({
                     clip={clip}
                     pxPerSecond={pxPerSecond}
                     library={library}
+                    processed={processed}
                     laneHeight={LANE_HEIGHT}
                     selected={selectedClipIds.includes(clip.id)}
                     onPointerDown={handleClipPointerDown}

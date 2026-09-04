@@ -13,6 +13,7 @@ const clip = (over: Partial<Clip>): Clip => ({
   gain: 1,
   fadeIn: 0,
   fadeOut: 0,
+  effects: "{}",
   ...over,
 });
 const track = (over: Partial<Track>): Track => ({
@@ -32,14 +33,14 @@ describe("computeSchedule", () => {
   it("delays a clip that starts after the playhead", () => {
     const [e] = computeSchedule([clip({ startTime: 3 })], 1, durations);
     expect(e.when).toBeCloseTo(2);
-    expect(e.offset).toBeCloseTo(0);
+    expect(e.elapsed).toBeCloseTo(0);
     expect(e.duration).toBeCloseTo(4);
   });
 
-  it("starts a clip already under the playhead immediately, mid-source", () => {
+  it("reports how far into a clip the playhead already is", () => {
     const [e] = computeSchedule([clip({ startTime: 2, sourceOffset: 1, duration: 6 })], 5, durations);
     expect(e.when).toBeCloseTo(0);
-    expect(e.offset).toBeCloseTo(4); // sourceOffset 1 + 3 s already elapsed
+    expect(e.elapsed).toBeCloseTo(3);
     expect(e.duration).toBeCloseTo(3);
   });
 
@@ -53,15 +54,35 @@ describe("computeSchedule", () => {
     expect(e.duration).toBeCloseTo(4);
   });
 
+  it("clamps in timeline seconds, accounting for speed", () => {
+    // Source 10 s, offset 6 -> 4 s of source left. At 2x that is only 2 s of timeline.
+    const fast = clip({ sourceOffset: 6, duration: 8, effects: JSON.stringify({ speed: 2 }) });
+    expect(computeSchedule([fast], 0, durations)[0].duration).toBeCloseTo(2);
+    // At 0.5x the same 4 s of source stretches to 8 s of timeline, so nothing is clipped.
+    const slow = clip({ sourceOffset: 6, duration: 8, effects: JSON.stringify({ speed: 0.5 }) });
+    expect(computeSchedule([slow], 0, durations)[0].duration).toBeCloseTo(8);
+  });
+
   it("skips clips whose media length is unknown", () => {
     expect(computeSchedule([clip({ mediaId: "ghost" })], 0, durations)).toEqual([]);
   });
 
-  it("carries gain and fades through", () => {
-    const [e] = computeSchedule([clip({ gain: 0.4, fadeIn: 0.5, fadeOut: 1 })], 0, durations);
+  it("carries gain, fades and normalised effects through", () => {
+    const [e] = computeSchedule(
+      [clip({ gain: 0.4, fadeIn: 0.5, fadeOut: 1, effects: '{"pitch":7}' })],
+      0,
+      durations,
+    );
     expect(e.gain).toBe(0.4);
     expect(e.fadeIn).toBe(0.5);
     expect(e.fadeOut).toBe(1);
+    expect(e.effects.pitch).toBe(7);
+    expect(e.effects.speed).toBe(1); // filled from the defaults
+  });
+
+  it("normalises a corrupt effects payload instead of failing", () => {
+    const [e] = computeSchedule([clip({ effects: "not json" })], 0, durations);
+    expect(e.effects.speed).toBe(1);
   });
 });
 

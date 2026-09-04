@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2, Sparkles } from "lucide-react";
 import type { Clip } from "../api/client";
 import type { MediaLibrary } from "../audio/mediaLibrary";
+import type { ProcessedAudio } from "../audio/processedAudio";
+import { isNeutral, normalizeEffects } from "../audio/effects";
 import { paintWaveform, fadePolygon } from "./waveformPainter";
+import { Hint } from "./Hint";
 import { secondsToPixels } from "../lib/time";
 
 export type ClipPart = "body" | "left" | "right" | "fadeIn" | "fadeOut";
@@ -16,6 +19,7 @@ export function ClipView({
   clip,
   pxPerSecond,
   library,
+  processed,
   laneHeight,
   selected,
   onPointerDown,
@@ -24,6 +28,7 @@ export function ClipView({
   clip: Clip;
   pxPerSecond: number;
   library: MediaLibrary;
+  processed: ProcessedAudio;
   laneHeight: number;
   selected: boolean;
   onPointerDown: (e: ReactPointerEvent, clip: Clip, part: ClipPart) => void;
@@ -35,6 +40,8 @@ export function ClipView({
   const width = Math.max(1, secondsToPixels(clip.duration, pxPerSecond));
   const height = laneHeight - 24;
   const missing = library.failed(clip.mediaId);
+  const treated = !isNeutral(normalizeEffects(clip.effects));
+  const rendering = processed.isRendering(clip);
 
   // A media finishing its load has to repaint every clip that references it.
   // The version counter is a paint dependency, not just a re-render trigger:
@@ -87,9 +94,25 @@ export function ClipView({
           : "border-studio-border"
       }`}
     >
-      <span className="pointer-events-none absolute left-1.5 top-1 z-10 max-w-[calc(100%-0.75rem)] truncate rounded bg-studio-bg/70 px-1 font-mono text-[11px] text-muted-foreground">
+      <span className="pointer-events-none absolute left-1.5 top-1 z-10 max-w-[calc(100%-3rem)] truncate rounded bg-studio-bg/70 px-1 font-mono text-[11px] text-muted-foreground">
         {clip.name}
       </span>
+
+      {/* A treatment must never be invisible on the timeline. */}
+      {rendering ? (
+        <span className="absolute right-2.5 top-1 z-10 flex items-center gap-1 rounded bg-studio-bg/80 px-1 text-[10px] text-muted-foreground">
+          <Loader2 className="size-3 animate-spin" />
+          traitement…
+        </span>
+      ) : (
+        treated && (
+          <Hint label="Ce clip a des effets. Sélectionnez-le pour les régler.">
+            <span className="absolute right-2.5 top-1 z-10 rounded bg-studio-bg/80 p-0.5 text-primary">
+              <Sparkles className="size-3" />
+            </span>
+          </Hint>
+        )
+      )}
 
       {missing ? (
         <div className="flex h-full items-center justify-center gap-1.5 text-destructive">
@@ -115,32 +138,36 @@ export function ClipView({
       )}
 
       {/* Trim edges */}
-      <div
-        onPointerDown={(e) => onPointerDown(e, clip, "left")}
-        style={{ width: EDGE_HIT_PX }}
-        className="absolute left-0 top-0 h-full cursor-ew-resize bg-white/10 hover:bg-white/30"
-        title="Rogner le début"
-      />
-      <div
-        onPointerDown={(e) => onPointerDown(e, clip, "right")}
-        style={{ width: EDGE_HIT_PX }}
-        className="absolute right-0 top-0 h-full cursor-ew-resize bg-white/10 hover:bg-white/30"
-        title="Rogner la fin"
-      />
+      <Hint label="Fait glisser le début du clip sans déplacer le reste." side="top">
+        <div
+          onPointerDown={(e) => onPointerDown(e, clip, "left")}
+          style={{ width: EDGE_HIT_PX }}
+          className="absolute left-0 top-0 h-full cursor-ew-resize bg-white/10 hover:bg-white/30"
+        />
+      </Hint>
+      <Hint label="Fait glisser la fin du clip." side="top">
+        <div
+          onPointerDown={(e) => onPointerDown(e, clip, "right")}
+          style={{ width: EDGE_HIT_PX }}
+          className="absolute right-0 top-0 h-full cursor-ew-resize bg-white/10 hover:bg-white/30"
+        />
+      </Hint>
 
       {/* Fade handles, inset so they do not fight the trim edges */}
-      <div
-        onPointerDown={(e) => onPointerDown(e, clip, "fadeIn")}
-        style={{ left: EDGE_HIT_PX, width: FADE_HANDLE_PX, height: FADE_HANDLE_PX }}
-        className="absolute top-0 cursor-nesw-resize rounded-br-md bg-primary/50 hover:bg-primary"
-        title="Fondu d'entrée"
-      />
-      <div
-        onPointerDown={(e) => onPointerDown(e, clip, "fadeOut")}
-        style={{ right: EDGE_HIT_PX, width: FADE_HANDLE_PX, height: FADE_HANDLE_PX }}
-        className="absolute top-0 cursor-nwse-resize rounded-bl-md bg-primary/50 hover:bg-primary"
-        title="Fondu de sortie"
-      />
+      <Hint label="Fait monter le son progressivement au début du clip." side="top">
+        <div
+          onPointerDown={(e) => onPointerDown(e, clip, "fadeIn")}
+          style={{ left: EDGE_HIT_PX, width: FADE_HANDLE_PX, height: FADE_HANDLE_PX }}
+          className="absolute top-0 cursor-nesw-resize rounded-br-md bg-primary/50 hover:bg-primary"
+        />
+      </Hint>
+      <Hint label="Fait descendre le son progressivement à la fin du clip." side="top">
+        <div
+          onPointerDown={(e) => onPointerDown(e, clip, "fadeOut")}
+          style={{ right: EDGE_HIT_PX, width: FADE_HANDLE_PX, height: FADE_HANDLE_PX }}
+          className="absolute top-0 cursor-nwse-resize rounded-bl-md bg-primary/50 hover:bg-primary"
+        />
+      </Hint>
     </div>
   );
 }

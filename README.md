@@ -12,7 +12,20 @@
 
 **Enregistrer** — armer une piste avec son bouton `Rec` : son vumètre devient live, ce qui permet de vérifier le micro *avant* de lancer. Le bouton Enregistrer déclenche alors un décompte 3-2-1 puis capture depuis la tête de lecture sur la piste armée. La piste reste armée pour une reprise.
 
-**Exporter** — « Exporter le mixdown » produit un WAV 44,1 kHz stéréo avec gains de clip, fondus, volumes, panoramiques et solo/muet appliqués.
+**Traiter** — sélectionner un clip ouvre son inspecteur à droite :
+
+| Réglage | Effet |
+|---|---|
+| Gain | Volume du clip. « Normaliser » le règle pour que le passage le plus fort atteigne le maximum sans saturer. |
+| Vitesse | Ralentit ou accélère. **La longueur du clip sur la timeline change en conséquence** ; s'il ne rentre plus, il est recalé sur l'espace libre le plus proche. |
+| Préserver la hauteur | Cochée, ralentir ne rend pas la voix grave. Décochée, c'est un effet bande : la vitesse transpose aussi, et le réglage de hauteur affiche la transposition subie. |
+| Hauteur | Transpose en demi-tons sans changer la durée. |
+| Égaliseur | Grave (250 Hz), Médium (1 kHz), Aigu (4 kHz), en dB. |
+| Réverbération | Quantité de réverbération et taille de la pièce simulée. |
+
+Double-cliquer un réglage le remet à sa valeur neutre. Les réglages s'appliquent à toute la sélection, et chaque modification s'annule d'un seul `Ctrl+Z`. Un clip traité porte un repère sur la timeline.
+
+**Exporter** — « Exporter le mixdown » produit un WAV 44,1 kHz stéréo. Lecture et export partagent la même chaîne de traitement, donc le fichier exporté sonne exactement comme ce que vous entendez.
 
 Le projet est sauvegardé automatiquement.
 
@@ -31,6 +44,8 @@ Le projet est sauvegardé automatiquement.
 
 ## Documentation
 
+- Spec effets : `docs/superpowers/specs/2026-09-04-edito-clip-effects-design.md`
+- Plan effets : `docs/superpowers/plans/2026-09-04-edito-clip-effects.md`
 - Spec v2 : `docs/superpowers/specs/2026-09-04-edito-v2-editing-core-design.md`
 - Plan v2 : `docs/superpowers/plans/2026-09-04-edito-v2-editing-core.md`
 - Spec v1 : `docs/superpowers/specs/2026-09-03-edito-audio-editor-design.md`

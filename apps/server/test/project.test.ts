@@ -144,4 +144,59 @@ describe("project routes", () => {
     expect(clip.fadeIn).toBe(0);
     expect(clip.fadeOut).toBe(0);
   });
+
+  it("round-trips the clip effects payload verbatim", async () => {
+    const app = buildApp();
+    seedMedia();
+    const effects = JSON.stringify({ speed: 0.5, pitch: -3, preservePitch: true });
+    await app.inject({
+      method: "PATCH",
+      url: "/api/project",
+      payload: {
+        tracks: [TRACK],
+        clips: [
+          {
+            id: "c1",
+            trackId: "t1",
+            mediaId: "m1",
+            startTime: 0,
+            sourceOffset: 0,
+            duration: 2,
+            name: "a",
+            gain: 1,
+            fadeIn: 0,
+            fadeOut: 0,
+            effects,
+          },
+        ],
+      },
+    });
+    const clip = (await app.inject({ method: "GET", url: "/api/project" })).json().clips[0];
+    expect(clip.effects).toBe(effects);
+  });
+
+  it("defaults effects to an empty object when omitted", async () => {
+    const app = buildApp();
+    seedMedia();
+    await app.inject({
+      method: "PATCH",
+      url: "/api/project",
+      payload: {
+        tracks: [TRACK],
+        clips: [
+          {
+            id: "c1",
+            trackId: "t1",
+            mediaId: "m1",
+            startTime: 0,
+            sourceOffset: 0,
+            duration: 2,
+            name: "a",
+          },
+        ],
+      },
+    });
+    const clip = (await app.inject({ method: "GET", url: "/api/project" })).json().clips[0];
+    expect(clip.effects).toBe("{}");
+  });
 });

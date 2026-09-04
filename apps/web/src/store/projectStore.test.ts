@@ -74,6 +74,7 @@ describe("projectStore", () => {
     gain: 1,
     fadeIn: 0,
     fadeOut: 0,
+    effects: "{}",
   };
 
   it("replaces the selection with selectClips", () => {

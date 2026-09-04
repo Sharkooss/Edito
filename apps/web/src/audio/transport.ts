@@ -1,7 +1,10 @@
 import type { AudioEngine } from "./engine";
 import type { MediaLibrary } from "./mediaLibrary";
+import type { ProcessedAudio } from "./processedAudio";
 import type { Track, Clip } from "../api/client";
-import { computeSchedule, projectDuration, audibleTracks, type ScheduleEntry } from "./scheduling";
+import { computeSchedule, projectDuration, audibleTracks } from "./scheduling";
+import { buildClipChain } from "./clipChain";
+import { ImpulseCache } from "./impulseResponse";
 
 type TimeListener = (t: number) => void;
 type EndedListener = () => void;
@@ -19,6 +22,8 @@ const CLOCK_INTERVAL_MS = 30;
 export class Transport {
   private engine: AudioEngine;
   private library: MediaLibrary;
+  private processed: ProcessedAudio;
+  private impulses: ImpulseCache;
   private clips: Clip[] = [];
   private tracks: Track[] = [];
 
@@ -37,9 +42,15 @@ export class Transport {
   /** Set false while recording, so the take can run past the existing material. */
   private autoStopAllowed = true;
 
-  constructor(engine: AudioEngine, library: MediaLibrary) {
+  constructor(engine: AudioEngine, library: MediaLibrary, processed: ProcessedAudio) {
     this.engine = engine;
     this.library = library;
+    this.processed = processed;
+    const ctx = engine.getContext();
+    this.impulses = new ImpulseCache(
+      (channels, length, sampleRate) => ctx.createBuffer(channels, length, sampleRate),
+      ctx.sampleRate,
+    );
   }
 
   setProject(clips: Clip[], tracks: Track[]): void {
@@ -61,6 +72,9 @@ export class Transport {
     if (this.playing) return;
     await this.engine.unlock();
     await this.library.preload(this.clips.map((c) => c.mediaId));
+    // Renders any stretched clip before playback, so a treated clip does not
+    // silently drop out of the first pass.
+    await this.processed.preload(this.clips);
     this.schedule(this.anchorTime);
     this.startClock();
   }
@@ -119,21 +133,25 @@ export class Transport {
       audible.has(e.trackId),
     );
 
+    const clipsById = new Map(this.clips.map((c) => [c.id, c]));
+
     this.sources = [];
     for (const entry of entries) {
-      const buffer = this.library.get(entry.mediaId);
-      if (!buffer) continue;
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-
-      const startAt = ctx.currentTime + entry.when;
-      const clipGain = ctx.createGain();
-      applyEnvelope(clipGain, entry, startAt);
-
-      source.connect(clipGain as unknown as AudioNode);
-      clipGain.connect(this.engine.ensureTrackNodes(entry.trackId).gain as unknown as AudioNode);
-      source.start(startAt, entry.offset, entry.duration);
-      this.sources.push(source);
+      const clip = clipsById.get(entry.clipId);
+      if (!clip) continue;
+      // Null while a stretched clip is still rendering; it joins on the next
+      // schedule rather than blocking playback of everything else.
+      const audio = this.processed.get(clip);
+      if (!audio) continue;
+      this.sources.push(
+        buildClipChain(
+          { ctx, impulses: this.impulses },
+          entry,
+          audio,
+          this.engine.ensureTrackNodes(entry.trackId).gain as unknown as AudioNode,
+          ctx.currentTime + entry.when,
+        ),
+      );
     }
 
     this.anchorTime = from;
@@ -188,18 +206,5 @@ export class Transport {
   private emitTime(): void {
     const t = this.getCurrentTime();
     for (const l of this.timeListeners) l(t);
-  }
-}
-
-/** Clip gain plus its fade ramps, scheduled on the clip's own gain node. */
-function applyEnvelope(node: GainNode, entry: ScheduleEntry, startAt: number): void {
-  const g = node.gain;
-  const fadeIn = Math.min(entry.fadeIn, entry.duration);
-  g.setValueAtTime(fadeIn > 0 ? 0 : entry.gain, startAt);
-  if (fadeIn > 0) g.linearRampToValueAtTime(entry.gain, startAt + fadeIn);
-  if (entry.fadeOut > 0) {
-    const fadeOut = Math.min(entry.fadeOut, entry.duration);
-    g.setValueAtTime(entry.gain, startAt + Math.max(0, entry.duration - fadeOut));
-    g.linearRampToValueAtTime(0, startAt + entry.duration);
   }
 }
