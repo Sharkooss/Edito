@@ -21,4 +21,4 @@ jobs:
             git pull origin main
             docker compose up -d --build
             sleep 5
-            docker compose exec app wget -qO- http://localhost:3000/healthz || (docker compose logs --tail 100 && exit 1)
+            docker compose exec app wget -qO- http://127.0.0.1:3000/healthz || (docker compose logs --tail 100 && exit 1)
