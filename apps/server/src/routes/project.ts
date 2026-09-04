@@ -47,10 +47,59 @@ export function loadProjectState(): ProjectState {
   return { project, tracks, clips, media };
 }
 
+const trackSchema = {
+  type: "object",
+  required: ["id", "orderIndex", "name", "color", "volume", "pan", "muted", "soloed"],
+  properties: {
+    id: { type: "string" },
+    orderIndex: { type: "number" },
+    name: { type: "string" },
+    color: { type: "string" },
+    volume: { type: "number" },
+    pan: { type: "number" },
+    muted: { type: "boolean" },
+    soloed: { type: "boolean" },
+  },
+};
+
+const clipSchema = {
+  type: "object",
+  required: ["id", "trackId", "mediaId", "startTime", "sourceOffset", "duration", "name"],
+  properties: {
+    id: { type: "string" },
+    trackId: { type: "string" },
+    mediaId: { type: "string" },
+    startTime: { type: "number" },
+    sourceOffset: { type: "number" },
+    duration: { type: "number" },
+    name: { type: "string" },
+  },
+};
+
+const patchProjectBodySchema = {
+  type: "object",
+  properties: {
+    project: {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+      },
+    },
+    tracks: {
+      type: "array",
+      items: trackSchema,
+    },
+    clips: {
+      type: "array",
+      items: clipSchema,
+    },
+  },
+};
+
 export async function registerProjectRoutes(app: FastifyInstance) {
   app.get("/api/project", async () => loadProjectState());
 
-  app.patch("/api/project", async (req, reply) => {
+  app.patch("/api/project", { schema: { body: patchProjectBodySchema } }, async (req, reply) => {
     const body = req.body as { project?: Partial<Project>; tracks?: Track[]; clips?: Clip[] };
     const db = getDb();
     const tx = db.transaction(() => {

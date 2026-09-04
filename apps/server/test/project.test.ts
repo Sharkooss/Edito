@@ -45,4 +45,24 @@ describe("project routes", () => {
     expect(body.tracks).toHaveLength(1);
     expect(body.tracks[0].name).toBe("Voix");
   });
+
+  it("PATCH /api/project with an invalid track (missing orderIndex) returns 400", async () => {
+    const app = buildApp();
+    const invalidTrack = {
+      id: "t1",
+      // orderIndex is missing
+      name: "Voix",
+      color: "#f97316",
+      volume: 1,
+      pan: 0,
+      muted: false,
+      soloed: false,
+    };
+    const patchRes = await app.inject({
+      method: "PATCH",
+      url: "/api/project",
+      payload: { tracks: [invalidTrack] },
+    });
+    expect(patchRes.statusCode).toBe(400);
+  });
 });
