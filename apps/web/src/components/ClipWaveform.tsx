@@ -112,7 +112,7 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
   return (
     <div
       onMouseDown={handleMouseDown}
-      onClick={() => selectClip(clip.id)}
+      onClick={(e) => { e.stopPropagation(); selectClip(clip.id); }}
       onDoubleClick={() => deleteClipWithHistory(clip)}
       style={{ left: secondsToPixels(clip.startTime, pxPerSecond), width: secondsToPixels(clip.duration, pxPerSecond) }}
       className={`absolute top-1 h-16 cursor-pointer overflow-hidden rounded border ${

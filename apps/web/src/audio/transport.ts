@@ -43,7 +43,11 @@ export class Transport {
     const wasPlaying = this.playing;
     if (wasPlaying) this.stopSources();
     this.currentTime = Math.max(0, seconds);
-    if (wasPlaying) this.restartFrom(this.currentTime);
+    if (wasPlaying) {
+      this.restartFrom(this.currentTime);
+    } else {
+      this.emit();
+    }
   }
 
   async play(clips: Clip[], tracks: Track[], getBufferUrl: (mediaId: string) => string): Promise<void> {
