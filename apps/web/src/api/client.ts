@@ -41,11 +41,11 @@ export interface ProjectPatch {
 
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(`API error ${res.status}`);
-  return res.json();
+  return res.json() as Promise<T>;
 }
 
 export function fetchProject(): Promise<ProjectState> {
-  return fetch("/api/project").then(handle);
+  return fetch("/api/project").then(handle<ProjectState>);
 }
 
 export function saveProject(patch: ProjectPatch): Promise<void> {
@@ -61,7 +61,7 @@ export function uploadMedia(file: File, meta: { duration: number; sampleRate: nu
   form.append("file", file);
   form.append("duration", String(meta.duration));
   form.append("sampleRate", String(meta.sampleRate));
-  return fetch("/api/media", { method: "POST", body: form }).then(handle);
+  return fetch("/api/media", { method: "POST", body: form }).then(handle<MediaDTO>);
 }
 
 export function deleteMedia(id: string): Promise<void> {
