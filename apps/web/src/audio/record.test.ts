@@ -1,25 +1,28 @@
-import { describe, it, expect, vi } from "vitest";
-import { MicRecorder } from "./record";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { pickMimeType } from "./record";
 
-class FakeMediaRecorder {
-  ondataavailable: ((e: { data: Blob }) => void) | null = null;
-  onstop: (() => void) | null = null;
-  start() {}
-  stop() {
-    this.ondataavailable?.({ data: new Blob(["chunk"]) });
-    this.onstop?.();
-  }
-}
+afterEach(() => vi.unstubAllGlobals());
 
-describe("MicRecorder", () => {
-  it("stop() resolves with a Blob containing recorded chunks", async () => {
-    vi.stubGlobal("MediaRecorder", FakeMediaRecorder as any);
-    const fakeStream = { getTracks: () => [] } as unknown as MediaStream;
-    const recorder = new MicRecorder(fakeStream);
-    await recorder.start();
-    expect(recorder.isRecording()).toBe(true);
-    const blob = await recorder.stop();
-    expect(blob).toBeInstanceOf(Blob);
-    expect(recorder.isRecording()).toBe(false);
+describe("pickMimeType", () => {
+  it("prefers opus when supported", () => {
+    vi.stubGlobal("MediaRecorder", {
+      isTypeSupported: (t: string) => t === "audio/webm;codecs=opus",
+    });
+    expect(pickMimeType()).toBe("audio/webm;codecs=opus");
+  });
+
+  it("falls back to plain webm", () => {
+    vi.stubGlobal("MediaRecorder", { isTypeSupported: (t: string) => t === "audio/webm" });
+    expect(pickMimeType()).toBe("audio/webm");
+  });
+
+  it("returns an empty string when nothing is supported, letting the browser choose", () => {
+    vi.stubGlobal("MediaRecorder", { isTypeSupported: () => false });
+    expect(pickMimeType()).toBe("");
+  });
+
+  it("returns an empty string when MediaRecorder is absent entirely", () => {
+    vi.stubGlobal("MediaRecorder", undefined);
+    expect(pickMimeType()).toBe("");
   });
 });

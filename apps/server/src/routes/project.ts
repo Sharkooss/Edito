@@ -24,6 +24,9 @@ function rowToClip(r: any): Clip {
     sourceOffset: r.source_offset,
     duration: r.duration,
     name: r.name,
+    gain: r.gain,
+    fadeIn: r.fade_in,
+    fadeOut: r.fade_out,
   };
 }
 
@@ -73,6 +76,9 @@ const clipSchema = {
     sourceOffset: { type: "number" },
     duration: { type: "number" },
     name: { type: "string" },
+    gain: { type: "number" },
+    fadeIn: { type: "number" },
+    fadeOut: { type: "number" },
   },
 };
 
@@ -121,10 +127,24 @@ export async function registerProjectRoutes(app: FastifyInstance) {
       if (body.clips) {
         db.prepare("DELETE FROM clip").run();
         const insert = db.prepare(
-          `INSERT INTO clip (id, track_id, media_id, start_time, source_offset, duration, name)
-           VALUES (@id, @trackId, @mediaId, @startTime, @sourceOffset, @duration, @name)`
+          `INSERT INTO clip (id, track_id, media_id, start_time, source_offset, duration, name, gain, fade_in, fade_out)
+           VALUES (@id, @trackId, @mediaId, @startTime, @sourceOffset, @duration, @name, @gain, @fadeIn, @fadeOut)`
         );
-        for (const c of body.clips) insert.run(c);
+        // gain/fades arrived after v1, so a client that predates them still saves.
+        for (const c of body.clips) {
+          insert.run({
+            id: c.id,
+            trackId: c.trackId,
+            mediaId: c.mediaId,
+            startTime: c.startTime,
+            sourceOffset: c.sourceOffset,
+            duration: c.duration,
+            name: c.name,
+            gain: c.gain ?? 1,
+            fadeIn: c.fadeIn ?? 0,
+            fadeOut: c.fadeOut ?? 0,
+          });
+        }
       }
     });
     tx();

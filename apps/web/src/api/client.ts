@@ -17,6 +17,12 @@ export interface Clip {
   sourceOffset: number;
   duration: number;
   name: string;
+  /** Linear clip gain; 1 is unity. */
+  gain: number;
+  /** Fade-in length in seconds, measured from the clip start. */
+  fadeIn: number;
+  /** Fade-out length in seconds, measured back from the clip end. */
+  fadeOut: number;
 }
 
 export interface MediaDTO {

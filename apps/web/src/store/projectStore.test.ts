@@ -3,7 +3,14 @@ import { useProjectStore } from "./projectStore";
 
 describe("projectStore", () => {
   beforeEach(() => {
-    useProjectStore.setState({ tracks: [], clips: [], media: [], selectedClipId: null, hydrated: false });
+    useProjectStore.setState({
+      tracks: [],
+      clips: [],
+      media: [],
+      selectedClipIds: [],
+      tool: "select",
+      hydrated: false,
+    });
   });
 
   it("addTrack appends a track", () => {
@@ -44,5 +51,66 @@ describe("projectStore", () => {
     expect(useProjectStore.getState().hydrated).toBe(false);
     useProjectStore.getState().loadState({ tracks: [], clips: [], media: [] });
     expect(useProjectStore.getState().hydrated).toBe(true);
+  });
+
+  const TRACK = {
+    id: "t1",
+    orderIndex: 0,
+    name: "Piste 1",
+    color: "",
+    volume: 1,
+    pan: 0,
+    muted: false,
+    soloed: false,
+  };
+  const CLIP = {
+    id: "c1",
+    trackId: "t1",
+    mediaId: "m",
+    startTime: 0,
+    sourceOffset: 0,
+    duration: 1,
+    name: "c",
+    gain: 1,
+    fadeIn: 0,
+    fadeOut: 0,
+  };
+
+  it("replaces the selection with selectClips", () => {
+    useProjectStore.getState().selectClips(["a", "b"]);
+    expect(useProjectStore.getState().selectedClipIds).toEqual(["a", "b"]);
+  });
+
+  it("toggles a clip in and out of the selection", () => {
+    useProjectStore.getState().selectClips(["a"]);
+    useProjectStore.getState().toggleClipSelection("b");
+    expect(useProjectStore.getState().selectedClipIds).toEqual(["a", "b"]);
+    useProjectStore.getState().toggleClipSelection("a");
+    expect(useProjectStore.getState().selectedClipIds).toEqual(["b"]);
+  });
+
+  it("drops deleted clips from the selection when a track is removed", () => {
+    useProjectStore.setState({ tracks: [TRACK], clips: [CLIP], selectedClipIds: ["c1"] });
+    useProjectStore.getState().removeTrack("t1");
+    expect(useProjectStore.getState().selectedClipIds).toEqual([]);
+  });
+
+  it("ensureTrackForImport reuses an empty track before creating one", () => {
+    useProjectStore.setState({ tracks: [TRACK], clips: [], selectedClipIds: [] });
+    expect(useProjectStore.getState().ensureTrackForImport().id).toBe("t1");
+    expect(useProjectStore.getState().tracks).toHaveLength(1);
+  });
+
+  it("ensureTrackForImport creates a new track when every track is occupied", () => {
+    useProjectStore.setState({ tracks: [TRACK], clips: [CLIP], selectedClipIds: [] });
+    const track = useProjectStore.getState().ensureTrackForImport();
+    expect(track.id).not.toBe("t1");
+    expect(useProjectStore.getState().tracks).toHaveLength(2);
+  });
+
+  it("defaults the tool to select and switches to blade", () => {
+    expect(useProjectStore.getState().tool).toBe("select");
+    useProjectStore.getState().setTool("blade");
+    expect(useProjectStore.getState().tool).toBe("blade");
   });
 });

@@ -1,36 +1,71 @@
 import type { Track, Clip } from "../api/client";
+import type { MediaLibrary } from "./mediaLibrary";
+import { computeSchedule, projectDuration, audibleTracks } from "./scheduling";
 
+/**
+ * Offline mixdown.
+ *
+ * Reads from the same MediaLibrary the editor plays through, and applies the
+ * same chain — clip gain, fade ramps, track volume/pan, mute/solo — so what is
+ * exported matches what was heard.
+ */
 export async function renderMixdown(
   clips: Clip[],
   tracks: Track[],
-  getBufferUrl: (mediaId: string) => string,
-  sampleRate: number
+  library: Pick<MediaLibrary, "get" | "preload">,
+  sampleRate: number,
 ): Promise<AudioBuffer> {
-  const totalDuration = clips.reduce((max, c) => Math.max(max, c.startTime + c.duration), 0) || 1;
-  const offlineCtx = new OfflineAudioContext(2, Math.ceil(totalDuration * sampleRate), sampleRate);
-  const bufferCache = new Map<string, AudioBuffer>();
+  const totalDuration = projectDuration(clips);
+  const frames = Math.ceil(totalDuration * sampleRate);
+  const offlineCtx = new OfflineAudioContext(2, Math.max(1, frames), sampleRate);
+  if (frames <= 0) return offlineCtx.startRendering();
 
+  await library.preload(clips.map((c) => c.mediaId));
+
+  const audible = audibleTracks(tracks);
+  const sourceDurations = new Map<string, number>();
   for (const clip of clips) {
-    const track = tracks.find((t) => t.id === clip.trackId);
-    if (!track) continue;
-    const url = getBufferUrl(clip.mediaId);
-    let buffer = bufferCache.get(url);
-    if (!buffer) {
-      const arrayBuffer = await fetch(url).then((r) => r.arrayBuffer());
-      buffer = await offlineCtx.decodeAudioData(arrayBuffer);
-      bufferCache.set(url, buffer);
+    const buffer = library.get(clip.mediaId);
+    if (buffer) sourceDurations.set(clip.mediaId, buffer.duration);
+  }
+
+  // Playhead 0: `when` is then the clip's own start time on the timeline.
+  const entries = computeSchedule(clips, 0, sourceDurations).filter((e) => audible.has(e.trackId));
+
+  const trackChains = new Map<string, GainNode>();
+  for (const entry of entries) {
+    const buffer = library.get(entry.mediaId);
+    const track = tracks.find((t) => t.id === entry.trackId);
+    if (!buffer || !track) continue;
+
+    let trackGain = trackChains.get(track.id);
+    if (!trackGain) {
+      trackGain = offlineCtx.createGain();
+      trackGain.gain.value = track.volume;
+      const panner = offlineCtx.createStereoPanner();
+      panner.pan.value = track.pan;
+      trackGain.connect(panner);
+      panner.connect(offlineCtx.destination);
+      trackChains.set(track.id, trackGain);
     }
-    const gain = offlineCtx.createGain();
-    gain.gain.value = track.muted ? 0 : track.volume;
-    const panner = offlineCtx.createStereoPanner();
-    panner.pan.value = track.pan;
-    gain.connect(panner);
-    panner.connect(offlineCtx.destination);
+
+    const startAt = entry.when;
+    const clipGain = offlineCtx.createGain();
+    const g = clipGain.gain;
+    const fadeIn = Math.min(entry.fadeIn, entry.duration);
+    g.setValueAtTime(fadeIn > 0 ? 0 : entry.gain, startAt);
+    if (fadeIn > 0) g.linearRampToValueAtTime(entry.gain, startAt + fadeIn);
+    if (entry.fadeOut > 0) {
+      const fadeOut = Math.min(entry.fadeOut, entry.duration);
+      g.setValueAtTime(entry.gain, startAt + Math.max(0, entry.duration - fadeOut));
+      g.linearRampToValueAtTime(0, startAt + entry.duration);
+    }
+    clipGain.connect(trackGain);
 
     const source = offlineCtx.createBufferSource();
     source.buffer = buffer;
-    source.connect(gain);
-    source.start(clip.startTime, clip.sourceOffset, clip.duration);
+    source.connect(clipGain);
+    source.start(startAt, entry.offset, entry.duration);
   }
 
   return offlineCtx.startRendering();

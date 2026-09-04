@@ -12,37 +12,37 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: "import",
     title: "Importer un son",
-    body: "Clique ici ou glisse-dépose directement un fichier audio pour l'ajouter à ton projet.",
+    body: "Clique ici ou glisse-dépose un ou plusieurs fichiers. Chaque fichier arrive sur sa propre piste, à la tête de lecture — rien ne se superpose.",
   },
   {
-    target: "record",
-    title: "Enregistrer",
-    body: "Capture une prise depuis ton micro. Le bouton devient rouge et clignote pendant l'enregistrement.",
-  },
-  {
-    target: "export",
-    title: "Exporter le mixdown",
-    body: "Une fois ton montage prêt, exporte le mixage final en fichier WAV.",
-  },
-  {
-    target: "zoom",
-    title: "Zoom",
-    body: "Rapproche ou éloigne la timeline pour travailler au sample près ou voir l'ensemble du projet.",
+    target: "tools",
+    title: "Sélection et Lame",
+    body: "En mode Sélection (V), tu déplaces les clips, y compris d'une piste à l'autre. En mode Lame (C), un trait suit ton curseur et le clic coupe le clip exactement là.",
   },
   {
     target: "transport",
     title: "Lecture",
-    body: "Joue, mets en pause ou stoppe la lecture. Le temps écoulé s'affiche juste à côté.",
-  },
-  {
-    target: "tracks",
-    title: "Pistes",
-    body: "Chaque piste a son propre volume, son panoramique, et ses boutons Muet / Solo. Ajoute-en autant que nécessaire en bas de la liste.",
+    body: "Joue, mets en pause ou stoppe. La lecture s'arrête d'elle-même à la fin du projet. Barre d'espace pour jouer ou mettre en pause.",
   },
   {
     target: "timeline",
-    title: "Timeline",
-    body: "Glisse tes clips ici pour les positionner dans le temps, tire leurs bords pour les couper, double-clique pour en supprimer un.",
+    title: "Montage",
+    body: "Tire les bords d'un clip pour le rogner, les coins orange pour ses fondus. Clic droit ouvre le menu : couper, dupliquer, fondus, supprimer. Ctrl+Z annule.",
+  },
+  {
+    target: "record",
+    title: "Enregistrer",
+    body: "Arme d'abord une piste avec son bouton Rec : son vumètre devient live, tu vérifies ton micro avant de lancer. Ensuite ce bouton déclenche un décompte 3-2-1 puis capture depuis la tête de lecture.",
+  },
+  {
+    target: "zoom",
+    title: "Zoom",
+    body: "Rapproche ou éloigne la timeline. L'aimantation reste au même écart à l'écran quel que soit le zoom ; maintiens Alt pour la désactiver.",
+  },
+  {
+    target: "export",
+    title: "Exporter le mixdown",
+    body: "Exporte le mixage final en WAV, avec les gains, les fondus, les volumes, panoramiques et le solo/muet appliqués.",
   },
 ];
 
