@@ -36,7 +36,7 @@ export function Toolbar({
       onDragOver={(e) => e.preventDefault()}
       className="flex items-center gap-3 border-b border-studio-border bg-studio-panel px-3 py-2"
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" data-tour="import">
         <Button onClick={() => inputRef.current?.click()}>
           <Upload className="size-4" />
           Importer un son
@@ -59,47 +59,51 @@ export function Toolbar({
 
       <div className="h-6 w-px bg-studio-border" />
 
-      <Button
-        variant={isRecording ? "destructive" : "secondary"}
-        onClick={onToggleRecord}
-        className={isRecording ? "animate-pulse" : ""}
-      >
-        {isRecording ? (
-          <>
-            <Square className="size-4 fill-current" />
-            Arrêter l'enregistrement
-          </>
-        ) : (
-          <>
-            <Mic className="size-4" />
-            Enregistrer
-          </>
-        )}
-      </Button>
+      <div data-tour="record">
+        <Button
+          variant={isRecording ? "destructive" : "secondary"}
+          onClick={onToggleRecord}
+          className={isRecording ? "animate-pulse" : ""}
+        >
+          {isRecording ? (
+            <>
+              <Square className="size-4 fill-current" />
+              Arrêter l'enregistrement
+            </>
+          ) : (
+            <>
+              <Mic className="size-4" />
+              Enregistrer
+            </>
+          )}
+        </Button>
+      </div>
 
       <div className="h-6 w-px bg-studio-border" />
 
-      <Button
-        variant="secondary"
-        disabled={isExporting}
-        onClick={async () => {
-          setIsExporting(true);
-          try {
-            await onExport();
-          } finally {
-            setIsExporting(false);
-          }
-        }}
-      >
-        {isExporting ? (
-          <>
-            <Loader2 className="size-4 animate-spin" />
-            Export en cours…
-          </>
-        ) : (
-          "Exporter le mixdown"
-        )}
-      </Button>
+      <div data-tour="export">
+        <Button
+          variant="secondary"
+          disabled={isExporting}
+          onClick={async () => {
+            setIsExporting(true);
+            try {
+              await onExport();
+            } finally {
+              setIsExporting(false);
+            }
+          }}
+        >
+          {isExporting ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Export en cours…
+            </>
+          ) : (
+            "Exporter le mixdown"
+          )}
+        </Button>
+      </div>
 
       <div className="ml-auto flex items-center gap-3">
         {saveStatus && saveStatus !== "idle" && (
@@ -126,7 +130,7 @@ export function Toolbar({
           </div>
         )}
 
-        <div className="flex gap-1 rounded-md border border-studio-border bg-console-inset p-0.5">
+        <div className="flex gap-1 rounded-md border border-studio-border bg-console-inset p-0.5" data-tour="zoom">
           <Button size="icon" variant="ghost" title="Zoom arrière" onClick={onZoomOut}>
             <ZoomOut className="size-4" />
           </Button>

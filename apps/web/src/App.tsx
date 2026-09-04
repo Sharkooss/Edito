@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Info } from "lucide-react";
 import { Toolbar } from "./components/Toolbar";
 import { TrackList } from "./components/TrackList";
 import { TimelineCanvas } from "./components/TimelineCanvas";
 import { TransportBar } from "./components/TransportBar";
+import { GuidedTour } from "./components/GuidedTour";
+import { Button } from "./components/ui/button";
 import { useProjectStore } from "./store/projectStore";
 import { useHistoryStore } from "./store/historyStore";
 import { decodeAudioFile } from "./audio/import";
@@ -30,6 +33,7 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [pxPerSecond, setPxPerSecond] = useState(100);
+  const [tourOpen, setTourOpen] = useState(false);
   const { status: saveStatus, saveNow } = useAutosave(2000);
 
   useEffect(() => transport.onTimeUpdate(setCurrentTime), []);
@@ -132,7 +136,17 @@ export default function App() {
       <header className="flex items-center gap-2 border-b border-studio-border bg-studio-bg px-3 py-1.5">
         <span className="font-mono text-xs font-semibold tracking-[0.2em] text-primary">EDITO</span>
         <span className="text-xs text-muted-foreground">Studio de montage audio</span>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="ml-auto size-6"
+          title="Visite guidée de l'interface"
+          onClick={() => setTourOpen(true)}
+        >
+          <Info className="size-4" />
+        </Button>
       </header>
+      <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} />
       <Toolbar
         onImport={handleImport}
         isRecording={isRecording}

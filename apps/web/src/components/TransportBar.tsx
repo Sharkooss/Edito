@@ -21,7 +21,7 @@ export function TransportBar({
 
   return (
     <div className="flex items-center gap-3 border-b border-studio-border bg-studio-panel px-3 py-2">
-      <div className="flex gap-1">
+      <div className="flex gap-1" data-tour="transport">
         <Button
           size="icon"
           onClick={onTogglePlayPause}

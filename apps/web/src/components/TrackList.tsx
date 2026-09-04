@@ -22,7 +22,7 @@ export function TrackList() {
   }
 
   return (
-    <div className="flex w-60 shrink-0 flex-col border-r border-studio-border">
+    <div className="flex w-60 shrink-0 flex-col border-r border-studio-border" data-tour="tracks">
       {[...tracks]
         .sort((a, b) => a.orderIndex - b.orderIndex)
         .map((t, i) => (

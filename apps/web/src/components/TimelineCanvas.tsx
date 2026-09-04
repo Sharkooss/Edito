@@ -14,7 +14,7 @@ export function TimelineCanvas({
   }
 
   return (
-    <div className="relative flex-1 overflow-x-auto" onClick={handleClick}>
+    <div className="relative flex-1 overflow-x-auto" onClick={handleClick} data-tour="timeline">
       <div
         className="pointer-events-none absolute top-0 z-10 h-full w-px bg-orange-400"
         style={{ left: secondsToPixels(currentTime, pxPerSecond) }}
