@@ -36,6 +36,14 @@ function useEdgeDrag(
     }
     function onUp() {
       const current = useProjectStore.getState().clips.find((c) => c.id === clip.id)!;
+      const unchanged =
+        current.startTime === original.startTime &&
+        current.sourceOffset === original.sourceOffset &&
+        current.duration === original.duration;
+      if (unchanged) {
+        setActive(false);
+        return;
+      }
       updateClip(clip.id, { startTime: original.startTime, sourceOffset: original.sourceOffset, duration: original.duration });
       useHistoryStore.getState().push({
         do: () => updateClip(clip.id, { startTime: current.startTime, sourceOffset: current.sourceOffset, duration: current.duration }),
@@ -93,6 +101,11 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
     function onUp() {
       const finalStartTime = useProjectStore.getState().clips.find((c) => c.id === clip.id)!.startTime;
       const original = dragOriginal!;
+      if (finalStartTime === original.startTime) {
+        setDragStartX(null);
+        setDragOriginal(null);
+        return;
+      }
       updateClip(clip.id, { startTime: original.startTime }); // revert, puis rejouer via l'historique
       useHistoryStore.getState().push({
         do: () => updateClip(clip.id, { startTime: finalStartTime }),

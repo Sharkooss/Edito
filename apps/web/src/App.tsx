@@ -14,7 +14,7 @@ import { randomUUID } from "./lib/uuid";
 import { MicRecorder, requestMicStream } from "./audio/record";
 import { useAutosave } from "./lib/useAutosave";
 import { renderMixdown, audioBufferToWav } from "./audio/export";
-import { deleteClipWithHistory } from "./audio/clipEditing";
+import { deleteClipWithHistory, splitClipWithHistory } from "./audio/clipEditing";
 import { useKeyboardShortcuts } from "./lib/keyboard";
 
 const audioCtx = new AudioContext();
@@ -69,6 +69,11 @@ export default function App() {
     },
     onUndo: () => useHistoryStore.getState().undo(),
     onRedo: () => useHistoryStore.getState().redo(),
+    onSplit: () => {
+      const { clips, selectedClipId } = useProjectStore.getState();
+      const clip = clips.find((c) => c.id === selectedClipId);
+      if (clip) splitClipWithHistory(clip, currentTime);
+    },
   });
 
   async function handleImport(file: File) {

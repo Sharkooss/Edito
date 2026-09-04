@@ -8,6 +8,23 @@ import { getDb } from "../db.js";
 const ALLOWED_MIME = new Set(["audio/wav", "audio/wave", "audio/x-wav", "audio/mpeg", "audio/ogg", "audio/mp4", "audio/m4a"]);
 const MAX_BYTES = 100 * 1024 * 1024;
 
+// Le type MIME d'origine n'est pas persisté en base ; on le redérive de l'extension
+// du fichier stocké pour renseigner Content-Type. Sans cet en-tête, les éléments
+// <audio> (utilisés par ex. par wavesurfer.js pour l'aperçu de la waveform) restent
+// bloqués en chargement indéfiniment côté navigateur, même si fetch()+decodeAudioData
+// fonctionne très bien sans lui.
+const MIME_BY_EXT: Record<string, string> = {
+  ".wav": "audio/wav",
+  ".mp3": "audio/mpeg",
+  ".ogg": "audio/ogg",
+  ".mp4": "audio/mp4",
+  ".m4a": "audio/m4a",
+};
+
+function mimeForFile(filename: string): string {
+  return MIME_BY_EXT[extname(filename).toLowerCase()] ?? "application/octet-stream";
+}
+
 export async function registerMediaRoutes(app: FastifyInstance, opts: { uploadsDir: string; maxBytes?: number }) {
   const uploadsDir = opts.uploadsDir;
   const maxBytes = opts.maxBytes ?? MAX_BYTES;
@@ -55,10 +72,12 @@ export async function registerMediaRoutes(app: FastifyInstance, opts: { uploadsD
     const stat = statSync(filePath);
     const size = stat.size;
     const rangeHeader = req.headers.range;
+    const contentType = mimeForFile(row.stored_filename);
 
     if (!rangeHeader) {
       reply.header("Accept-Ranges", "bytes");
       reply.header("Content-Length", size);
+      reply.header("Content-Type", contentType);
       return reply.send(createReadStream(filePath));
     }
 
@@ -88,6 +107,7 @@ export async function registerMediaRoutes(app: FastifyInstance, opts: { uploadsD
     reply.header("Accept-Ranges", "bytes");
     reply.header("Content-Range", `bytes ${start}-${end}/${size}`);
     reply.header("Content-Length", end - start + 1);
+    reply.header("Content-Type", contentType);
     return reply.send(createReadStream(filePath, { start, end }));
   });
 
