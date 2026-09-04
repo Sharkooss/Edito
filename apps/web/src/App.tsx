@@ -3,13 +3,17 @@ import { TrackList } from "./components/TrackList";
 import { TimelineCanvas } from "./components/TimelineCanvas";
 import { useProjectStore } from "./store/projectStore";
 import { decodeAudioFile } from "./audio/import";
+import { AudioEngine } from "./audio/engine";
+import { useEngineSync } from "./audio/useEngineSync";
 import { uploadMedia } from "./api/client";
 import { randomUUID } from "./lib/uuid";
 
 const audioCtx = new AudioContext();
+const audioEngine = new AudioEngine(audioCtx);
 
 export default function App() {
   const { tracks, addTrack, addMedia, addClip } = useProjectStore();
+  useEngineSync(audioEngine);
 
   async function handleImport(file: File) {
     const buffer = await decodeAudioFile(file, audioCtx);
