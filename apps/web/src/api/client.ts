@@ -23,6 +23,8 @@ export interface Clip {
   fadeIn: number;
   /** Fade-out length in seconds, measured back from the clip end. */
   fadeOut: number;
+  /** JSON blob of effect settings. Always read it through normalizeEffects. */
+  effects: string;
 }
 
 export interface MediaDTO {
