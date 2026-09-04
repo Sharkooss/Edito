@@ -7,8 +7,10 @@ export function pixelsToSeconds(px: number, pxPerSecond: number): number {
 }
 
 export function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  const cc = Math.round((seconds - Math.floor(seconds)) * 100);
+  const totalCentiseconds = Math.round(seconds * 100);
+  const cc = totalCentiseconds % 100;
+  const totalSeconds = Math.floor(totalCentiseconds / 100);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(cc).padStart(2, "0")}`;
 }
