@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import WaveSurfer from "wavesurfer.js";
 import { useProjectStore, type Clip } from "../store/projectStore";
 import { secondsToPixels } from "../lib/time";
+import { deleteClipWithHistory } from "../audio/clipEditing";
 
 export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -26,6 +27,7 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
   return (
     <div
       onClick={() => selectClip(clip.id)}
+      onDoubleClick={() => deleteClipWithHistory(clip)}
       style={{ left: secondsToPixels(clip.startTime, pxPerSecond), width: secondsToPixels(clip.duration, pxPerSecond) }}
       className={`absolute top-1 h-16 cursor-pointer overflow-hidden rounded border ${
         selectedClipId === clip.id ? "border-orange-400" : "border-transparent"
