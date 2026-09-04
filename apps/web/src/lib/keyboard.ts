@@ -6,11 +6,16 @@ interface Handlers {
   onUndo: () => void;
   onRedo: () => void;
   onSplit: () => void;
+  onSelectTool: () => void;
+  onBladeTool: () => void;
+  onDuplicate: () => void;
+  onSelectAll: () => void;
 }
 
 function isTextInput(el: EventTarget | null): boolean {
-  const tag = (el as HTMLElement)?.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA";
+  const target = el as HTMLElement | null;
+  const tag = target?.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable === true;
 }
 
 export function useKeyboardShortcuts(handlers: Handlers): void {
@@ -21,12 +26,52 @@ export function useKeyboardShortcuts(handlers: Handlers): void {
     function onKeyDown(e: KeyboardEvent) {
       if (isTextInput(e.target)) return;
       const current = handlersRef.current;
-      if (e.code === "Space") { e.preventDefault(); current.onPlayPause(); return; }
-      if (e.key === "Delete" || e.key === "Backspace") { current.onDelete(); return; }
-      if (e.key.toLowerCase() === "s" && !e.ctrlKey && !e.metaKey && !e.altKey) { current.onSplit(); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) { current.onUndo(); return; }
-      if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && e.shiftKey) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y")) {
+      const mod = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+
+      if (mod && key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        current.onUndo();
+        return;
+      }
+      if ((mod && key === "z" && e.shiftKey) || (mod && key === "y")) {
+        e.preventDefault();
         current.onRedo();
+        return;
+      }
+      if (mod && key === "d") {
+        e.preventDefault();
+        current.onDuplicate();
+        return;
+      }
+      if (mod && key === "a") {
+        e.preventDefault();
+        current.onSelectAll();
+        return;
+      }
+      // Everything below is unmodified: Ctrl+S must stay the browser's.
+      if (mod || e.altKey) return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        current.onPlayPause();
+        return;
+      }
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        current.onDelete();
+        return;
+      }
+      if (key === "s") {
+        current.onSplit();
+        return;
+      }
+      if (key === "v") {
+        current.onSelectTool();
+        return;
+      }
+      if (key === "c") {
+        current.onBladeTool();
       }
     }
     window.addEventListener("keydown", onKeyDown);
