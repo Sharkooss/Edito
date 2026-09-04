@@ -5,6 +5,55 @@ import { useHistoryStore } from "../store/historyStore";
 import { secondsToPixels, pixelsToSeconds } from "../lib/time";
 import { deleteClipWithHistory } from "../audio/clipEditing";
 
+function useEdgeDrag(
+  clip: Clip,
+  pxPerSecond: number,
+  edge: "left" | "right",
+  updateClip: (id: string, patch: Partial<Clip>) => void
+) {
+  const [active, setActive] = useState(false);
+
+  function onMouseDown(e: ReactMouseEvent) {
+    e.stopPropagation();
+    setActive(true);
+  }
+
+  useEffect(() => {
+    if (!active) return;
+    const original = { ...clip };
+    function onMove(e: globalThis.MouseEvent) {
+      const rect = (e.target as HTMLElement).closest(".timeline-track")?.getBoundingClientRect();
+      if (!rect) return;
+      const timeAtCursor = pixelsToSeconds(e.clientX - rect.left, pxPerSecond);
+      if (edge === "left") {
+        const newStart = Math.min(timeAtCursor, original.startTime + original.duration - 0.1);
+        const delta = newStart - original.startTime;
+        updateClip(clip.id, { startTime: newStart, sourceOffset: original.sourceOffset + delta, duration: original.duration - delta });
+      } else {
+        const newDuration = Math.max(0.1, timeAtCursor - original.startTime);
+        updateClip(clip.id, { duration: newDuration });
+      }
+    }
+    function onUp() {
+      const current = useProjectStore.getState().clips.find((c) => c.id === clip.id)!;
+      updateClip(clip.id, { startTime: original.startTime, sourceOffset: original.sourceOffset, duration: original.duration });
+      useHistoryStore.getState().push({
+        do: () => updateClip(clip.id, { startTime: current.startTime, sourceOffset: current.sourceOffset, duration: current.duration }),
+        undo: () => updateClip(clip.id, { startTime: original.startTime, sourceOffset: original.sourceOffset, duration: original.duration }),
+      });
+      setActive(false);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp, { once: true });
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [active]);
+
+  return onMouseDown;
+}
+
 export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const media = useProjectStore((s) => s.media.find((m) => m.id === clip.mediaId));
@@ -71,6 +120,8 @@ export function ClipWaveform({ clip, pxPerSecond }: { clip: Clip; pxPerSecond: n
       }`}
     >
       <div ref={containerRef} />
+      <div onMouseDown={useEdgeDrag(clip, pxPerSecond, "left", updateClip)} className="absolute left-0 top-0 h-full w-1.5 cursor-ew-resize bg-white/20" />
+      <div onMouseDown={useEdgeDrag(clip, pxPerSecond, "right", updateClip)} className="absolute right-0 top-0 h-full w-1.5 cursor-ew-resize bg-white/20" />
     </div>
   );
 }
