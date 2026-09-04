@@ -32,6 +32,10 @@ export class Transport {
   private timeListeners = new Set<TimeListener>();
   private endedListeners = new Set<EndedListener>();
   private clockId: ReturnType<typeof setInterval> | null = null;
+  /** Whether reaching the end of the last clip should stop playback. */
+  private stopAtEnd = true;
+  /** Set false while recording, so the take can run past the existing material. */
+  private autoStopAllowed = true;
 
   constructor(engine: AudioEngine, library: MediaLibrary) {
     this.engine = engine;
@@ -135,6 +139,10 @@ export class Transport {
     this.anchorTime = from;
     this.anchorContextTime = ctx.currentTime;
     this.playing = true;
+    // Only arm the end-of-project stop when something is actually going to
+    // play. Starting from beyond the last clip (parking the playhead there to
+    // record a new take, say) must not immediately rewind to zero.
+    this.stopAtEnd = this.sources.length > 0;
   }
 
   private stopSources(): void {
@@ -151,12 +159,20 @@ export class Transport {
     this.sources = [];
   }
 
+  /**
+   * Recording has to be able to roll past the end of the existing material —
+   * that is the normal case for adding a take after what is already there.
+   */
+  setAutoStopAllowed(allowed: boolean): void {
+    this.autoStopAllowed = allowed;
+  }
+
   private startClock(): void {
     if (this.clockId !== null) return;
-    const end = () => projectDuration(this.clips);
     this.clockId = setInterval(() => {
       this.emitTime();
-      const total = end();
+      if (!this.stopAtEnd || !this.autoStopAllowed) return;
+      const total = projectDuration(this.clips);
       if (total > 0 && this.getCurrentTime() >= total) {
         this.stop();
         for (const l of this.endedListeners) l();

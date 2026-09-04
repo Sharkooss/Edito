@@ -30,14 +30,17 @@ export function ClipView({
   onContextMenu: (e: ReactPointerEvent | React.MouseEvent, clip: Clip) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [, forceRepaint] = useState(0);
+  const [libraryVersion, setLibraryVersion] = useState(0);
 
   const width = Math.max(1, secondsToPixels(clip.duration, pxPerSecond));
   const height = laneHeight - 24;
   const missing = library.failed(clip.mediaId);
 
   // A media finishing its load has to repaint every clip that references it.
-  useEffect(() => library.onChange(() => forceRepaint((n) => n + 1)), [library]);
+  // The version counter is a paint dependency, not just a re-render trigger:
+  // without it the effect below keeps its stale deps and never repaints once
+  // the buffer arrives, leaving every clip blank.
+  useEffect(() => library.onChange(() => setLibraryVersion((n) => n + 1)), [library]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -55,7 +58,16 @@ export function ClipView({
       color: selected ? WAVE_COLOR_SELECTED : WAVE_COLOR,
       dpr: window.devicePixelRatio || 1,
     });
-  }, [library, clip.mediaId, clip.sourceOffset, clip.duration, width, height, selected]);
+  }, [
+    library,
+    libraryVersion,
+    clip.mediaId,
+    clip.sourceOffset,
+    clip.duration,
+    width,
+    height,
+    selected,
+  ]);
 
   const fadePoints = fadePolygon(
     width,

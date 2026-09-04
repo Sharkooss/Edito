@@ -160,6 +160,37 @@ describe("Transport", () => {
     expect(transport.isPlaying()).toBe(false);
   });
 
+  it("does not rewind when playback starts past the end of the last clip", async () => {
+    // Parking the playhead beyond the material — to record a take after it, say
+    // — used to trip the end-of-project stop instantly and jump back to zero.
+    const { transport, advance } = harness();
+    const ended = vi.fn();
+    transport.onEnded(ended);
+    transport.setProject([clip({ startTime: 0, duration: 2 })], [track]);
+    transport.seek(5);
+    await transport.play();
+    advance(1);
+    await new Promise((r) => setTimeout(r, 80));
+    expect(ended).not.toHaveBeenCalled();
+    expect(transport.getCurrentTime()).toBeCloseTo(6);
+    transport.stop();
+  });
+
+  it("keeps rolling past the project end while auto-stop is disabled", async () => {
+    const { transport, advance } = harness();
+    const ended = vi.fn();
+    transport.onEnded(ended);
+    transport.setProject([clip({ startTime: 0, duration: 2 })], [track]);
+    transport.setAutoStopAllowed(false);
+    await transport.play();
+    advance(3);
+    await new Promise((r) => setTimeout(r, 80));
+    expect(ended).not.toHaveBeenCalled();
+    expect(transport.getCurrentTime()).toBeCloseTo(3);
+    transport.setAutoStopAllowed(true);
+    transport.stop();
+  });
+
   it("does not schedule clips on inaudible tracks", async () => {
     const { transport, started } = harness();
     transport.setProject([clip()], [{ ...track, muted: true }]);

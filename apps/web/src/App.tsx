@@ -244,6 +244,9 @@ export default function App() {
       }
       const startedAt = transport.getCurrentTime();
       recorder.start();
+      // A take routinely extends past the existing material; the transport must
+      // keep rolling instead of stopping at the old project end.
+      transport.setAutoStopAllowed(false);
       void transport.play().then(() => setIsPlaying(true));
       dispatchRecording({ type: "BEGIN", startedAt });
       return;
@@ -268,6 +271,7 @@ export default function App() {
     if (!recorder) return;
     const blob = await recorder.stop();
     transport.pause();
+    transport.setAutoStopAllowed(true);
     setIsPlaying(false);
     dispatchRecording({ type: "STOP" });
 
