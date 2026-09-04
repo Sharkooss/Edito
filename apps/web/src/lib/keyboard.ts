@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface Handlers {
   onPlayPause: () => void;
@@ -13,17 +13,21 @@ function isTextInput(el: EventTarget | null): boolean {
 }
 
 export function useKeyboardShortcuts(handlers: Handlers): void {
+  const handlersRef = useRef(handlers);
+  handlersRef.current = handlers;
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (isTextInput(e.target)) return;
-      if (e.code === "Space") { e.preventDefault(); handlers.onPlayPause(); return; }
-      if (e.key === "Delete" || e.key === "Backspace") { handlers.onDelete(); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) { handlers.onUndo(); return; }
+      const current = handlersRef.current;
+      if (e.code === "Space") { e.preventDefault(); current.onPlayPause(); return; }
+      if (e.key === "Delete" || e.key === "Backspace") { current.onDelete(); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) { current.onUndo(); return; }
       if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && e.shiftKey) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y")) {
-        handlers.onRedo();
+        current.onRedo();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handlers]);
+  }, []);
 }

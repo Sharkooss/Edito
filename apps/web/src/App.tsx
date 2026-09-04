@@ -28,9 +28,25 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState(0);
   const [micRecorder, setMicRecorder] = useState<MicRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const { status: saveStatus, saveNow } = useAutosave(2000);
 
   useEffect(() => transport.onTimeUpdate(setCurrentTime), []);
+
+  async function togglePlayPause() {
+    if (isPlaying) {
+      transport.pause();
+      setIsPlaying(false);
+    } else {
+      await transport.play(useProjectStore.getState().clips, useProjectStore.getState().tracks, getBufferUrl);
+      setIsPlaying(true);
+    }
+  }
+
+  function stopPlayback() {
+    transport.stop();
+    setIsPlaying(false);
+  }
 
   useEffect(() => {
     fetchProject().then((state) => {
@@ -40,11 +56,7 @@ export default function App() {
 
   useKeyboardShortcuts({
     onPlayPause: () => {
-      if (transport.isPlaying()) {
-        transport.pause();
-      } else {
-        transport.play(useProjectStore.getState().clips, useProjectStore.getState().tracks, getBufferUrl);
-      }
+      togglePlayPause();
     },
     onDelete: () => {
       const { clips, selectedClipId } = useProjectStore.getState();
@@ -116,7 +128,7 @@ export default function App() {
         saveStatus={saveStatus}
         onRetrySave={saveNow}
       />
-      <TransportBar transport={transport} getBufferUrl={getBufferUrl} />
+      <TransportBar transport={transport} isPlaying={isPlaying} onTogglePlayPause={togglePlayPause} onStop={stopPlayback} />
       <div className="flex flex-1">
         <TrackList />
         <TimelineCanvas pxPerSecond={100} currentTime={currentTime} onSeek={(t) => transport.seek(t)} />
