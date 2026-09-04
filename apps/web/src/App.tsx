@@ -40,11 +40,15 @@ export default function App() {
 
   async function handleToggleRecord() {
     if (!isRecording) {
-      const stream = await requestMicStream();
-      const rec = new MicRecorder(stream);
-      await rec.start();
-      setMicRecorder(rec);
-      setIsRecording(true);
+      try {
+        const stream = await requestMicStream();
+        const rec = new MicRecorder(stream);
+        await rec.start();
+        setMicRecorder(rec);
+        setIsRecording(true);
+      } catch (err) {
+        console.error("Microphone access denied or unavailable:", err);
+      }
     } else {
       const blob = await micRecorder!.stop();
       setIsRecording(false);

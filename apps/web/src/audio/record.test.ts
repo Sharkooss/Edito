@@ -14,7 +14,7 @@ class FakeMediaRecorder {
 describe("MicRecorder", () => {
   it("stop() resolves with a Blob containing recorded chunks", async () => {
     vi.stubGlobal("MediaRecorder", FakeMediaRecorder as any);
-    const fakeStream = {} as MediaStream;
+    const fakeStream = { getTracks: () => [] } as unknown as MediaStream;
     const recorder = new MicRecorder(fakeStream);
     await recorder.start();
     expect(recorder.isRecording()).toBe(true);

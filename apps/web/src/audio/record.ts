@@ -25,7 +25,9 @@ export class MicRecorder {
       if (!this.recorder) return resolve(new Blob());
       this.recorder.onstop = () => {
         this.recording = false;
-        resolve(new Blob(this.chunks, { type: "audio/webm" }));
+        const blob = new Blob(this.chunks, { type: "audio/webm" });
+        this.stream.getTracks().forEach((track) => track.stop());
+        resolve(blob);
       };
       this.recorder.stop();
     });
