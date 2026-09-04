@@ -1,7 +1,7 @@
 # ---- Stage 1: build frontend ----
 FROM node:20-alpine AS web-build
 WORKDIR /repo
-COPY package.json ./
+COPY package.json tsconfig.base.json ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/server/package.json apps/server/package.json
 RUN apk add --no-cache python3 make g++
@@ -12,7 +12,7 @@ RUN npm run build -w apps/web
 # ---- Stage 2: build backend ----
 FROM node:20-alpine AS server-build
 WORKDIR /repo
-COPY package.json ./
+COPY package.json tsconfig.base.json ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/server/package.json apps/server/package.json
 RUN apk add --no-cache python3 make g++
