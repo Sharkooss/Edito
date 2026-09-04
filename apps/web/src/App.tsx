@@ -67,19 +67,23 @@ export default function App() {
   }
 
   async function handleExport() {
-    const buffer = await renderMixdown(
-      useProjectStore.getState().clips,
-      useProjectStore.getState().tracks,
-      (mediaId) => `/api/media/${mediaId}`,
-      44100
-    );
-    const blob = audioBufferToWav(buffer);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "edito-mixdown.wav";
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const buffer = await renderMixdown(
+        useProjectStore.getState().clips,
+        useProjectStore.getState().tracks,
+        (mediaId) => `/api/media/${mediaId}`,
+        44100
+      );
+      const blob = audioBufferToWav(buffer);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "edito-mixdown.wav";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Mixdown export failed:", err);
+    }
   }
 
   return (
