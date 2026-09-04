@@ -10,6 +10,7 @@ import { useEngineSync } from "./audio/useEngineSync";
 import { Transport } from "./audio/transport";
 import { uploadMedia } from "./api/client";
 import { randomUUID } from "./lib/uuid";
+import { MicRecorder, requestMicStream } from "./audio/record";
 
 const audioCtx = new AudioContext();
 const audioEngine = new AudioEngine(audioCtx);
@@ -20,6 +21,8 @@ export default function App() {
   const { tracks, addTrack, addMedia, addClip } = useProjectStore();
   useEngineSync(audioEngine);
   const [currentTime, setCurrentTime] = useState(0);
+  const [micRecorder, setMicRecorder] = useState<MicRecorder | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => transport.onTimeUpdate(setCurrentTime), []);
 
@@ -35,9 +38,24 @@ export default function App() {
     addClip({ id: randomUUID(), trackId, mediaId: media.id, startTime: 0, sourceOffset: 0, duration: media.duration, name: media.originalFilename });
   }
 
+  async function handleToggleRecord() {
+    if (!isRecording) {
+      const stream = await requestMicStream();
+      const rec = new MicRecorder(stream);
+      await rec.start();
+      setMicRecorder(rec);
+      setIsRecording(true);
+    } else {
+      const blob = await micRecorder!.stop();
+      setIsRecording(false);
+      const file = new File([blob], `Enregistrement ${new Date().toISOString()}.webm`, { type: "audio/webm" });
+      await handleImport(file); // réutilise le flux d'import de Task 4.3
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-studio-bg text-neutral-100">
-      <Toolbar onImport={handleImport} />
+      <Toolbar onImport={handleImport} isRecording={isRecording} onToggleRecord={handleToggleRecord} />
       <TransportBar transport={transport} getBufferUrl={getBufferUrl} />
       <div className="flex flex-1">
         <TrackList />

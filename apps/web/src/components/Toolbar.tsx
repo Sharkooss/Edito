@@ -1,7 +1,15 @@
 import { useRef, type DragEvent } from "react";
 import { Button } from "./ui/button";
 
-export function Toolbar({ onImport }: { onImport: (file: File) => void }) {
+export function Toolbar({
+  onImport,
+  isRecording,
+  onToggleRecord,
+}: {
+  onImport: (file: File) => void;
+  isRecording: boolean;
+  onToggleRecord: () => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleDrop(e: DragEvent<HTMLDivElement>) {
@@ -29,6 +37,9 @@ export function Toolbar({ onImport }: { onImport: (file: File) => void }) {
         }}
       />
       <span className="text-xs text-neutral-400">ou glisser-déposer un fichier ici</span>
+      <Button variant={isRecording ? "destructive" : "outline"} onClick={onToggleRecord}>
+        {isRecording ? "■ Arrêter l'enregistrement" : "● Enregistrer"}
+      </Button>
     </div>
   );
 }
